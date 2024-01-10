@@ -15,8 +15,11 @@ public:
 	ABlasterCharacter();
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	//注册要复制的变量
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 protected:
 	virtual void BeginPlay() override;
+	
 	void MoveForward(float Value);
 	void MoveRight(float Value);
 	void Turn(float Value);
@@ -30,7 +33,15 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly,meta = (AllowPrivateAccess = "true"), Category = Widget)
 	class UWidgetComponent* OverheadWidget;
-public:	
-	
 
+	//复制    works only when the variable is changed
+	//UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)
+	class AWeapon* OverlappingWeapon;
+
+	UFUNCTION()
+	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);//可以有输入参数，但只能有一个被复制变量的类型的参数，此例中只能有一个 AWeapon* 类型的参数，指被复制前最后一个数据
+public:	
+	//FORCEINLINE void SetOverlappingWeapon(AWeapon* Weapon){ OverlappingWeapon = Weapon; }
+	void SetOverlappingWeapon(AWeapon* Weapon);
 };
