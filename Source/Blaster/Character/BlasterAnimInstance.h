@@ -7,7 +7,7 @@
 #include "BlasterAnimInstance.generated.h"
 
 /**
- * 
+ * AnimInstance only has access to variables on this machine
  */
 UCLASS()
 class BLASTER_API UBlasterAnimInstance : public UAnimInstance
@@ -27,4 +27,10 @@ private:
 	bool bIsInAir;
 	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	bool bIsAccelerating;
+	
+	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
+	bool bWeaponEquipped;
+
+	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
+	bool bIsCrouched;
 };
