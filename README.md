@@ -35,6 +35,10 @@ https://docs.unrealengine.com/4.27/zh-CN/InteractiveExperiences/Networking/Overv
 - 使用C++中的 IsLocallyControlled 函数或蓝图中的Is     Locally Controlled函数，可检查Pawn是否受本地控制。基于执行是否与拥有客户端相关来过滤函数时，此方法十分拥有。
 - 构造期间Pawn可能未被指定控制器，因此避免在构造函数脚本中使用 IsLocallyControlled。
 
+# RPC
+
+参考：[虚幻引擎文档](https://docs.unrealengine.com/5.2/en-US/rpcs-in-unreal-engine/)
+
 **从服务器调用的 RPC**
 
 | Actor 所有权       | 未复制         | NetMulticast               | Server         | Client                      |
