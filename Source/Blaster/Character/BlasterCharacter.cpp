@@ -6,9 +6,11 @@
 #include "Blaster/Components/CombatComponent.h"
 #include "Blaster/Weapon/Weapon.h"
 #include "Camera/CameraComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
 
 
@@ -35,6 +37,9 @@ ABlasterCharacter::ABlasterCharacter()
 	CombatComponent->SetIsReplicated(true);// component dont need GetLifetimeReplicatedProps
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
+
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 }
 
 void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -69,6 +74,7 @@ void ABlasterCharacter::Tick(float DeltaTime)
 	 {
 	 	OverlappingWeapon->ShowPickupWidget(true);
 	 }*/
+	AimOffset(DeltaTime);
 }
 
 // Called to bind functionality to input
@@ -167,6 +173,40 @@ void ABlasterCharacter::AimButtonReleased()
 	if (CombatComponent)
 	{
 		CombatComponent->SetAiming(false);
+	}
+}
+
+void ABlasterCharacter::AimOffset(float DeltaTime)
+{
+	if (CombatComponent && CombatComponent->EquippedWeapon == nullptr) return;
+	
+	FVector Velocity = GetVelocity();
+	Velocity.Z = 0.f;
+	float Speed  = Velocity.Size();
+	bool bIsInAir = GetCharacterMovement()->IsFalling();
+
+	if (Speed == 0.f && !bIsInAir)
+	{
+		// GetBaseAimRotation 返回的数值是将pitch压缩至1字节并网络同步后解压缩的一个FRotator，此pitch取值范围是0~360
+		FRotator CurrentAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
+		FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, StartingAimRotation);
+		AO_Yaw = DeltaAimRotation.Yaw;
+		bUseControllerRotationYaw = false;
+	}
+	if (Speed>0.f || bIsInAir)
+	{
+		StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
+		AO_Yaw = 0.f;
+		bUseControllerRotationYaw = true;
+	}
+	AO_Pitch = GetBaseAimRotation().Pitch;
+	if (AO_Pitch > 90.f && !IsLocallyControlled())
+	{
+		// map pitch from [270, 360) to [-90, 0)
+		AO_Pitch -= 360.f;
+		// FVector2D InRange(270.f, 360.f);
+		// FVector2D OutRange(-90.f, 0.f);
+		// AO_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_Pitch);
 	}
 }
 
