@@ -30,15 +30,19 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	Velocity.Z = 0.f;
 	Speed  = Velocity.Size();
 
+	//basemove
 	bIsInAir = BlasterCharacter->GetCharacterMovement()->IsFalling();
 	bIsAccelerating = BlasterCharacter->GetCharacterMovement()->GetCurrentAcceleration().Size() > 0.f ? true : false;
+	bIsCrouched = BlasterCharacter->bIsCrouched;
+	//weapon
 	bWeaponEquipped = BlasterCharacter->IsWeaponEquipped();
 	EquippedWeapon = BlasterCharacter->GetEquippedWeapon();
-	bIsCrouched = BlasterCharacter->bIsCrouched;
+	//additive
 	bAiming = BlasterCharacter->IsAiming();
+	TurningInPlace = BlasterCharacter->GetTurningInPlace();
 
-	// World Rotation
-	FRotator AimRotation = BlasterCharacter->GetBaseAimRotation();
+	//equip move: Direction and Lean
+	FRotator AimRotation = BlasterCharacter->GetBaseAimRotation();// World Rotation
 	FRotator MovementRotationn = UKismetMathLibrary::MakeRotFromX(BlasterCharacter->GetVelocity());
 	//UE_LOG(LogTemp, Warning, TEXT("AimRotation Yaw: %f"), AimRotation.Yaw);
 	//UE_LOG(LogTemp, Warning, TEXT("MovementRotationn Yaw: %f"), MovementRotationn.Yaw);
@@ -53,9 +57,11 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	const float Interp = FMath::FInterpTo(Lean, Target, DeltaSeconds, 5.f);
 	Lean = FMath::Clamp(Interp, -90.f, 90.f);
 
+	//aimoffset
 	AO_Yaw = BlasterCharacter->GetAOYaw();
 	AO_Pitch = BlasterCharacter->GetAOPitch();
 
+	//FABRIK : LeftHandTransform
 	if (bWeaponEquipped && EquippedWeapon && EquippedWeapon->GetWeaponMesh() && BlasterCharacter->GetMesh())
 	{
 		LeftHandTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("LeftGrabSocket"), ERelativeTransformSpace::RTS_World);

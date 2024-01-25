@@ -65,3 +65,19 @@ https://docs.unrealengine.com/4.27/zh-CN/InteractiveExperiences/Networking/Overv
 PublicDependencyModuleNames和PrivateDependencyModelNames唯一区别是：将他们添加到私有依赖模块名称意味着这些模块仅在私有源文件中可用，如果想在项目中使用这些模块就需要添加到PublicDependencyModuleNames中
 
 在.uproject和.uplugin文件中可以更改此模块的属性和启用的插件
+
+
+
+UE中虽然可以前置声明，但是枚举类的前置声明较为特殊格式类似于：
+
+```c++
+enum class ETurningInPlace : uint8;
+```
+
+那么此时编译会报错：
+
+```ABAP
+Unrecognized type 'ETurningInPlace' - type must be a UCLASS, USTRUCT or UENUM
+```
+
+因此，如果不想在头文件引用体积大u的头文件，一般会另建头文件去写此枚举类，然后再引用枚举类的头文件

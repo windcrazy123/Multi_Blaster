@@ -4,7 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
+
+#include "Blaster/Types/TurningInPlace.h"
+
 #include "BlasterAnimInstance.generated.h"
+
+
+// enum 前置声明不管用，编译报错，详情在md
+//enum class ETurningInPlace : uint8;
 
 /**
  * AnimInstance only has access to variables on this machine
@@ -53,4 +60,7 @@ private:
 
 	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	FTransform LeftHandTransform;
+
+	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
+	ETurningInPlace TurningInPlace;
 };
