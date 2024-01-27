@@ -94,6 +94,8 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAction("Crouch",IE_Pressed,this,&ABlasterCharacter::CrouchButtonPressed);
 	PlayerInputComponent->BindAction("Aim",IE_Pressed,this,&ABlasterCharacter::AimButtonPressed);
 	PlayerInputComponent->BindAction("Aim",IE_Released,this,&ABlasterCharacter::AimButtonReleased);
+	PlayerInputComponent->BindAction("Fire",IE_Pressed,this,&ABlasterCharacter::FireButtonPressed);
+	PlayerInputComponent->BindAction("Fire",IE_Released,this,&ABlasterCharacter::FireButtonReleased);
 	
 	PlayerInputComponent->BindAxis("MoveForward",this,&ABlasterCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight",this,&ABlasterCharacter::MoveRight);
@@ -232,6 +234,36 @@ void ABlasterCharacter::Jump()
 		UnCrouch();
 	}
 	Super::Jump();
+}
+
+void ABlasterCharacter::FireButtonPressed()
+{
+	if (CombatComponent)
+	{
+		CombatComponent->FireButtonPressed(true);
+	}
+}
+
+void ABlasterCharacter::FireButtonReleased()
+{
+	if (CombatComponent)
+	{
+		CombatComponent->FireButtonPressed(false);
+	}
+}
+
+void ABlasterCharacter::PlayFireMontage(bool bIsAiming)
+{
+	if (CombatComponent == nullptr || CombatComponent->EquippedWeapon == nullptr) return;
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && FireWeaponMontage)
+	{
+		AnimInstance->Montage_Play(FireWeaponMontage);
+		FName SectionName;
+		SectionName = bIsAiming ? FName("FireRifleAim") : FName("FireRifleHip");
+		AnimInstance->Montage_JumpToSection(SectionName, FireWeaponMontage);
+	}
 }
 
 void ABlasterCharacter::TurnInPlace(float DeltaTime)
