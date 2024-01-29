@@ -117,3 +117,10 @@ void AWeapon::OnRep_WeaponState()
 	}
 }
 
+void AWeapon::Fire()
+{
+	if (FireAnimation)
+	{
+		WeaponMesh->PlayAnimation(FireAnimation, false);
+	}
+}

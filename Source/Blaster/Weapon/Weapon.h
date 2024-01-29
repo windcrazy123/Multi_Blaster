@@ -62,6 +62,9 @@ private:
 	
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	class UWidgetComponent* PickupWidget;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+	class UAnimationAsset* FireAnimation;
 public:
 	void ShowPickupWidget(bool bShowWidget);
 	void SetWeaponState(EWeaponState State);
@@ -72,4 +75,5 @@ public:
 	// UFUNCTION()
 	// void OnRep_WeaponState();
 
+	void Fire();
 };
