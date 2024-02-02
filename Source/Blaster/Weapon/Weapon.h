@@ -75,5 +75,5 @@ public:
 	// UFUNCTION()
 	// void OnRep_WeaponState();
 
-	void Fire();
+	virtual void Fire(const FVector& HitTarget);
 };

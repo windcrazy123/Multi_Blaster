@@ -3,11 +3,16 @@
 
 #include "Projectile.h"
 #include "Components/BoxComponent.h"
+#include "GameFramework/ProjectileMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Sound/SoundCue.h"
+//#include "Particles/ParticleSystemComponent.h"
 
-
+//子弹类型说明：https://zh.wikipedia.org/wiki/5.8%C3%9742mm
 AProjectile::AProjectile()
 {
 	PrimaryActorTick.bCanEverTick = false;
+	bReplicates = true;
 
 	BoxCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollision"));
 	SetRootComponent(BoxCollision);
@@ -16,12 +21,52 @@ AProjectile::AProjectile()
 	BoxCollision->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	BoxCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
 	BoxCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+
+	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
+	ProjectileMovementComponent->bRotationFollowsVelocity = true;
+	ProjectileMovementComponent->InitialSpeed = 93000.f;
+	ProjectileMovementComponent->MaxSpeed = 93000.f;
 }
 
 void AProjectile::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	if (Tracer)
+	{
+		TracerComponent = UGameplayStatics::SpawnEmitterAttached(
+			Tracer,
+			BoxCollision, FName(), GetActorLocation(), GetActorRotation(),
+			EAttachLocation::KeepWorldPosition
+		);
+	}
+
+	// AddOnComponentHitEvent on server
+	if (HasAuthority())
+	{
+		BoxCollision->OnComponentHit.AddDynamic(this, &AProjectile::OnHit);
+	}
+}
+
+//而所调用的Destroy方法广播给所有绑定的物体进行销毁，而我们的子弹是`bReplicates = true;`那么确实会传播给所有客户端，因此我们可以利用Destroy进行多播。
+void AProjectile::Destroyed()
+{
+	Super::Destroyed();
+
+	if (ImpactParticle)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticle, GetActorTransform());
+	}
+	if (ImpactSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());
+	}
+}
+
+void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+                        FVector NormalImpulse, const FHitResult& HitResult)
+{
+	Destroy();
 }
 
 void AProjectile::Tick(float DeltaTime)
