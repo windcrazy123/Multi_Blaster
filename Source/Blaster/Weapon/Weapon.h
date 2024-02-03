@@ -65,6 +65,9 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 	class UAnimationAsset* FireAnimation;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+	TSubclassOf<class ABulletShell> BulletShellClass;
 public:
 	void ShowPickupWidget(bool bShowWidget);
 	void SetWeaponState(EWeaponState State);

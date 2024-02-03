@@ -6,6 +6,8 @@
 #include "Components/SphereComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "BulletShell.h"
+#include "Engine/SkeletalMeshSocket.h"
 
 AWeapon::AWeapon()
 {
@@ -117,10 +119,28 @@ void AWeapon::OnRep_WeaponState()
 	}
 }
 
+// be multicasted
 void AWeapon::Fire(const FVector& HitTarget)
 {
 	if (FireAnimation)
 	{
 		WeaponMesh->PlayAnimation(FireAnimation, false);
+	}
+
+	//为什么这个多播，生成子弹不多播
+	if (BulletShellClass)
+	{
+		const USkeletalMeshSocket* AmmoEjectSocket = WeaponMesh->GetSocketByName(FName("AmmoEject"));
+
+		if (AmmoEjectSocket)
+		{
+			FTransform SocketTransform = AmmoEjectSocket->GetSocketTransform(WeaponMesh);
+			
+			UWorld* World = GetWorld();
+			if (World)
+			{
+				World->SpawnActor<ABulletShell>(BulletShellClass, SocketTransform);
+			}
+		}
 	}
 }

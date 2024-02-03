@@ -89,11 +89,45 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 }
 ```
 
+
+
+
+
+
+
 插件：插件由一个或多个模块组成，每个模块都有自己的C++代码和.Build.cs构建文件游戏模块，模块只有代码不能包含uassets文件如mesh、纹理等，封装使其井井有条；我们游戏项目本身就是一个模块，当我们启用插件时，会添加到我们的.uproject文件，一个插件可以引用其他插件，UE支持相互依赖的模块和插件，但是需要注意：插件和模块都有层次结构，只能依赖于其他相同或更高层级的插件和模块，如：我们游戏模块可以依赖引擎模块，引擎模块不能依赖我们的游戏，引擎的许多模块可以引用是因为处在同一层级。
 
 PublicDependencyModuleNames和PrivateDependencyModelNames唯一区别是：将他们添加到私有依赖模块名称意味着这些模块仅在私有源文件中可用，如果想在项目中使用这些模块就需要添加到PublicDependencyModuleNames中
 
 在.uproject和.uplugin文件中可以更改此模块的属性和启用的插件
+
+
+
+# FLatentActionInfo
+
+参考：[How does the FLatentActionInfo Linkage variable work?](https://forums.unrealengine.com/t/how-does-the-flatentactioninfo-linkage-variable-work/440636)
+
+```c++
+// Trigger any pending execution links
+	for (FLatentResponse::FExecutionInfo& LinkInfo : Response.LinksToExecute)
+	{
+        // INDEX_NONE == -1; LinkID : LatentActionInfo.Linkage
+		if (LinkInfo.LinkID != INDEX_NONE)
+		{
+			if (UObject* CallbackTarget = LinkInfo.CallbackTarget.Get())
+			{
+				check(CallbackTarget == InObject);
+
+				if (UFunction* ExecutionFunction = CallbackTarget->FindFunction(LinkInfo.ExecutionFunction))
+				{
+					CallbackTarget->ProcessEvent(ExecutionFunction, &(LinkInfo.LinkID));
+				}
+			}
+		}
+	}
+```
+
+
 
 
 
