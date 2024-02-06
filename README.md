@@ -1,3 +1,10 @@
+* content
+{:toc #markdown-toc}
+
+这是随手记得，很杂，在做的过程中一直改，还未整理，仅供参考
+
+<!-- more -->
+
 ## 网络概述
 
 遇到问题：UE版本5.2.1，character movement组件的Character Movement(Networking)中Network Smoothing Mode为Linear或Exponential时调用蓝图函数Set Capsule Half Height 会使得Mesh相对于根节点的位置重置
@@ -229,3 +236,9 @@ FVector_NetQuantize序列化会使用SerializePackedVector函数
 ![img](https://pic4.zhimg.com/80/v2-a16c2bc0f012d4dcfd48fff0e94cd8b3_720w.webp)
 
 加速度InAccel使用FVector_NetQuantize10存储，位置ClientLoc使用FVector_NetQuantize100存储。
+
+# HUD 和 PlayerController
+
+APlayerController::GetHUD()
+AHUD::DrawHUD()
+AHUD::DrawTexture()

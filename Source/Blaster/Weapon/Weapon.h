@@ -27,6 +27,32 @@ public:
 	AWeapon();
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	
+	void ShowPickupWidget(bool bShowWidget);
+    void SetWeaponState(EWeaponState State);
+    FORCEINLINE class USphereComponent* GetAreaSphere() const { return AreaSphere; }
+
+    FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
+
+    // UFUNCTION()
+    // void OnRep_WeaponState();
+
+    virtual void Fire(const FVector& HitTarget);
+	
+	/*
+	 * Textures for the weapon crosshairs
+	 */
+	UPROPERTY(EditAnywhere, Category = Crosshairs)
+	class UTexture2D* CrosshairsCenter;
+	UPROPERTY(EditAnywhere, Category = Crosshairs)
+	UTexture2D* CrosshairsLeft;
+	UPROPERTY(EditAnywhere, Category = Crosshairs)
+	UTexture2D* CrosshairsRight;
+	UPROPERTY(EditAnywhere, Category = Crosshairs)
+	UTexture2D* CrosshairsTop;
+	UPROPERTY(EditAnywhere, Category = Crosshairs)
+	UTexture2D* CrosshairsBottom;
 protected:
 	virtual void BeginPlay() override;
 
@@ -52,7 +78,7 @@ private:
 
 	//detect overlap events
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
-	class USphereComponent* AreaSphere;
+	USphereComponent* AreaSphere;
 
 	UPROPERTY(ReplicatedUsing = OnRep_WeaponState, VisibleAnywhere, Category = "Weapon Properties")
 	EWeaponState WeaponState;
@@ -68,15 +94,4 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 	TSubclassOf<class ABulletShell> BulletShellClass;
-public:
-	void ShowPickupWidget(bool bShowWidget);
-	void SetWeaponState(EWeaponState State);
-	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; }
-
-	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
-
-	// UFUNCTION()
-	// void OnRep_WeaponState();
-
-	virtual void Fire(const FVector& HitTarget);
 };

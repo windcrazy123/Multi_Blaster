@@ -9,6 +9,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
+#include "Blaster/PlayerController/DCPlayerController.h"
+#include "Blaster/HUD/DCHUD.h"
 
 #include "DrawDebugHelpers.h"
 
@@ -16,7 +18,7 @@
 // Set this component to be initialized when the game starts, and to be ticked every frame.
 UCombatComponent::UCombatComponent()
 {
-	PrimaryComponentTick.bCanEverTick = false;
+	PrimaryComponentTick.bCanEverTick = true;
 
 	AimWalkSpeed = 450.f;
 	AimCrouchSpeed = 200.f;
@@ -38,6 +40,67 @@ void UCombatComponent::BeginPlay()
 	{
 		BaseWalkSpeed = Character->GetCharacterMovement()->MaxWalkSpeed;
 		BaseCrouchSpeed = Character->GetCharacterMovement()->MaxWalkSpeedCrouched;
+	}
+}
+
+void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	SetHUDCrosshairs(DeltaTime);
+}
+
+//Tick
+void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
+{
+	if(Character == nullptr || Character->Controller == nullptr) return;
+
+	//Controller = Controller == nullptr ? Cast<ADCPlayerController>(Character->Controller) : Controller;
+	if(Controller == nullptr) Controller = Cast<ADCPlayerController>(Character->Controller);
+	if (Controller)
+	{
+		if(HUD == nullptr) HUD = Cast<ADCHUD>(Controller->GetHUD());
+		if (HUD)
+		{
+			FHUDPackage HUDPackage;
+			if (EquippedWeapon)
+			{
+				HUDPackage.CrosshairsCenter = EquippedWeapon->CrosshairsCenter;
+				HUDPackage.CrosshairsLeft = EquippedWeapon->CrosshairsLeft;
+				HUDPackage.CrosshairsRight = EquippedWeapon->CrosshairsRight;
+				HUDPackage.CrosshairsBottom = EquippedWeapon->CrosshairsBottom;
+				HUDPackage.CrosshairsTop = EquippedWeapon->CrosshairsTop;
+			}
+			else
+			{
+				HUDPackage.CrosshairsCenter = nullptr;
+				HUDPackage.CrosshairsLeft = nullptr;
+				HUDPackage.CrosshairsRight = nullptr;
+				HUDPackage.CrosshairsBottom = nullptr;
+				HUDPackage.CrosshairsTop = nullptr;
+			}
+
+			//Calculate Crosshair Spread Scale
+			FVector2D WalkSpeedRange(0.f, Character->GetCharacterMovement()->MaxWalkSpeed);
+			FVector2D VelocityMultiplierRange(0.f, 1.f);
+			FVector Velocity = Character->GetVelocity();
+			Velocity.Z = 0.f;
+
+			CrosshairsVelocityFactor = FMath::GetMappedRangeValueClamped(WalkSpeedRange, VelocityMultiplierRange, Velocity.Size());
+
+			if (Character->GetCharacterMovement()->IsFalling())
+			{
+				CrosshairsInAirFactor = FMath::FInterpTo(CrosshairsInAirFactor, 1.25f, DeltaTime, 2.25f);
+			}
+			else
+			{
+				CrosshairsInAirFactor = FMath::FInterpTo(CrosshairsInAirFactor, 0.f, DeltaTime, 15.f);
+			}
+			
+			HUDPackage.CrosshairsSpreadScale = CrosshairsVelocityFactor + CrosshairsInAirFactor;
+			
+			HUD->SetHUDPackage(HUDPackage);
+		}
 	}
 }
 
@@ -131,12 +194,6 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& HitResult)
 			DrawDebugSphere(GetWorld(),HitResult.ImpactPoint, 12.f, 12, FColor::Green, true);
 		}
 	}
-}
-
-void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
 }
 
 void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
