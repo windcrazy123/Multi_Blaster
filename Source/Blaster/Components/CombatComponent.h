@@ -67,4 +67,7 @@ private:
 	 */
 	float CrosshairsVelocityFactor;
 	float CrosshairsInAirFactor;
+
+	//correct weapon rotation at local
+	FVector HitTarget;
 };

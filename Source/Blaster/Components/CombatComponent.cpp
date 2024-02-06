@@ -48,9 +48,17 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	SetHUDCrosshairs(DeltaTime);
+
+	//correct weapon rotation at local 为了美观
+	if(Character && Character->IsLocallyControlled())
+	{
+		FHitResult HitResult;
+        TraceUnderCrosshairs(HitResult);
+        HitTarget = HitResult.ImpactPoint;
+	}
 }
 
-//Tick
+//Tick HUD
 void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 {
 	if(Character == nullptr || Character->Controller == nullptr) return;
@@ -189,10 +197,10 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& HitResult)
 		{
 			HitResult.ImpactPoint = End;
 		}
-		else
-		{
-			DrawDebugSphere(GetWorld(),HitResult.ImpactPoint, 12.f, 12, FColor::Green, true);
-		}
+		// else
+		// {
+		// 	DrawDebugSphere(GetWorld(),HitResult.ImpactPoint, 12.f, 12, FColor::Green, true);
+		// }
 	}
 }
 

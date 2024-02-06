@@ -84,4 +84,5 @@ public:
 	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; }
 
 	AWeapon* GetEquippedWeapon();
+	FVector GetHitTarget() const;
 };
