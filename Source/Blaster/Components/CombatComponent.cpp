@@ -11,6 +11,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Blaster/PlayerController/DCPlayerController.h"
 #include "Blaster/HUD/DCHUD.h"
+#include "Camera/CameraComponent.h"
 
 #include "DrawDebugHelpers.h"
 
@@ -40,6 +41,12 @@ void UCombatComponent::BeginPlay()
 	{
 		BaseWalkSpeed = Character->GetCharacterMovement()->MaxWalkSpeed;
 		BaseCrouchSpeed = Character->GetCharacterMovement()->MaxWalkSpeedCrouched;
+
+		if (Character->GetFollowCamera())
+		{
+			DefaultFOV = Character->GetFollowCamera()->FieldOfView;
+			CurrentFOV = DefaultFOV;
+		}
 	}
 }
 
@@ -47,18 +54,22 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	SetHUDCrosshairs(DeltaTime);
-
-	//correct weapon rotation at local 为了美观
 	if(Character && Character->IsLocallyControlled())
 	{
+		
+		SetHUDCrosshairs(DeltaTime);
+
+		//correct weapon rotation at local 为了美观
 		FHitResult HitResult;
         TraceUnderCrosshairs(HitResult);
         HitTarget = HitResult.ImpactPoint;
+
+		// FOV
+		InterpFOV(DeltaTime);
 	}
 }
 
-//Tick HUD
+//Tick(local) HUD
 void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 {
 	if(Character == nullptr || Character->Controller == nullptr) return;
@@ -109,6 +120,24 @@ void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 			
 			HUD->SetHUDPackage(HUDPackage);
 		}
+	}
+}
+
+//Tick(local) FOV
+void UCombatComponent::InterpFOV(float DeltaTime)
+{
+	if(EquippedWeapon == nullptr)return;
+	if (bAiming)
+	{
+		CurrentFOV = FMath::FInterpTo(CurrentFOV, EquippedWeapon->GetZoomedFOV(), DeltaTime, EquippedWeapon->GetZoomInterpSpeed());
+	}
+	else
+	{
+		CurrentFOV = FMath::FInterpTo(CurrentFOV, DefaultFOV, DeltaTime, ZoomInterpSpeed);
+	}
+	if (Character && Character->GetFollowCamera())
+	{
+		Character->GetFollowCamera()->SetFieldOfView(CurrentFOV);
 	}
 }
 
@@ -168,7 +197,7 @@ void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& T
 	}
 }
 
-// 获取屏幕中心Hit到物体的Result，距离为 FIRE_TRACE_LENGTH
+//Tick(local) 获取屏幕中心Hit到物体的Result，距离为 FIRE_TRACE_LENGTH
 void UCombatComponent::TraceUnderCrosshairs(FHitResult& HitResult)
 {
 	FVector2D ViewportSize;

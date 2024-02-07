@@ -70,4 +70,18 @@ private:
 
 	//correct weapon rotation at local
 	FVector HitTarget;
+
+	/*
+	 * Aiming and FOV
+	 * 武器停止aim时都是这个zoom的速度
+	 */
+	//Field of view when not aiming; set to the camera's base FOV in BeginPlay
+	float DefaultFOV;
+	float CurrentFOV;
+	//UPROPERTY(EditAnywhere, Category = CombatComponent)
+	//float ZoomedFOV = 30.f;
+	UPROPERTY(EditAnywhere, Category = CombatComponent)
+	float ZoomInterpSpeed = 20.f;
+
+	void InterpFOV(float DeltaTime);
 };

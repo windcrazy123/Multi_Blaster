@@ -53,6 +53,12 @@ public:
 	UTexture2D* CrosshairsTop;
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
 	UTexture2D* CrosshairsBottom;
+
+	/*
+	 * Zoomed FOV while aiming
+	 */
+	FORCEINLINE float GetZoomedFOV() const { return ZoomedFOV; }
+	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomInterpSpeed; }
 protected:
 	virtual void BeginPlay() override;
 
@@ -94,4 +100,13 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 	TSubclassOf<class ABulletShell> BulletShellClass;
+
+	/*
+	 * Zoomed FOV while aiming
+	 * 不同武器zoom的大小和速度
+	 */
+	UPROPERTY(EditAnywhere)
+	float ZoomedFOV = 30.f;
+	UPROPERTY(EditAnywhere)
+	float ZoomInterpSpeed = 20.f;
 };
