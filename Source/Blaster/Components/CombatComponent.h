@@ -4,6 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+
+#include "Blaster/HUD/DCHUD.h"
+
 #include "CombatComponent.generated.h"
 
 #define FIRE_TRACE_LENGTH 80000.f
@@ -67,6 +70,10 @@ private:
 	 */
 	float CrosshairsVelocityFactor;
 	float CrosshairsInAirFactor;
+	float CrosshairsAimFactor;
+	float CrosshairsShootingFactor;
+	
+	FHUDPackage HUDPackage;
 
 	//correct weapon rotation at local
 	FVector HitTarget;

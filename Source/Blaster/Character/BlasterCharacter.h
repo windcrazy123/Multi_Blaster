@@ -6,12 +6,13 @@
 #include "GameFramework/Character.h"
 
 #include "Blaster/Types/TurningInPlace.h"
+#include "Blaster/Interfaces/CrosshairInteraction.h"
 
 #include "BlasterCharacter.generated.h"
 
 
 UCLASS()
-class BLASTER_API ABlasterCharacter : public ACharacter
+class BLASTER_API ABlasterCharacter : public ACharacter, public ICrosshairInteraction
 {
 	GENERATED_BODY()
 

@@ -10,10 +10,10 @@
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "Blaster/PlayerController/DCPlayerController.h"
-#include "Blaster/HUD/DCHUD.h"
+//#include "Blaster/HUD/DCHUD.h"
 #include "Camera/CameraComponent.h"
 
-#include "DrawDebugHelpers.h"
+//#include "DrawDebugHelpers.h"
 
 
 // Set this component to be initialized when the game starts, and to be ticked every frame.
@@ -81,7 +81,6 @@ void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 		if(HUD == nullptr) HUD = Cast<ADCHUD>(Controller->GetHUD());
 		if (HUD)
 		{
-			FHUDPackage HUDPackage;
 			if (EquippedWeapon)
 			{
 				HUDPackage.CrosshairsCenter = EquippedWeapon->CrosshairsCenter;
@@ -100,7 +99,7 @@ void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 			}
 
 			//Calculate Crosshair Spread Scale
-			FVector2D WalkSpeedRange(0.f, Character->GetCharacterMovement()->MaxWalkSpeed);
+			FVector2D WalkSpeedRange(0.f, BaseWalkSpeed);
 			FVector2D VelocityMultiplierRange(0.f, 1.f);
 			FVector Velocity = Character->GetVelocity();
 			Velocity.Z = 0.f;
@@ -115,8 +114,23 @@ void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 			{
 				CrosshairsInAirFactor = FMath::FInterpTo(CrosshairsInAirFactor, 0.f, DeltaTime, 15.f);
 			}
+			if (bAiming)
+			{
+				CrosshairsAimFactor = FMath::FInterpTo(CrosshairsAimFactor, 0.58f, DeltaTime, 30.f);
+			}
+			else
+			{
+				CrosshairsAimFactor = FMath::FInterpTo(CrosshairsAimFactor, 0.f, DeltaTime, 30.f);
+			}
+
+			if(!FMath::IsNearlyZero(CrosshairsShootingFactor, 0.01f))
+			{
+				CrosshairsShootingFactor = FMath::FInterpTo(CrosshairsShootingFactor, 0.f, DeltaTime, 20.f);
+			}
 			
-			HUDPackage.CrosshairsSpreadScale = CrosshairsVelocityFactor + CrosshairsInAirFactor;
+			//基础离散值加其他因素影响
+			HUDPackage.CrosshairsSpreadScale = 0.5f +
+				CrosshairsVelocityFactor + CrosshairsInAirFactor - CrosshairsAimFactor + CrosshairsShootingFactor;
 			
 			HUD->SetHUDPackage(HUDPackage);
 		}
@@ -181,6 +195,8 @@ void UCombatComponent::FireButtonPressed(bool bPressed)
 		FHitResult HitResult;
 		TraceUnderCrosshairs(HitResult);
 		ServerFire(HitResult.ImpactPoint);
+
+		CrosshairsShootingFactor += 0.7f;
 	}
 }
 void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
@@ -230,6 +246,16 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& HitResult)
 		// {
 		// 	DrawDebugSphere(GetWorld(),HitResult.ImpactPoint, 12.f, 12, FColor::Green, true);
 		// }
+
+		//检测射线是否命中可与十字准星交互的物体（一般为可伤害的物体）
+		if (HitResult.GetActor() && HitResult.GetActor()->Implements<UCrosshairInteraction>())
+		{
+			HUDPackage.CrosshairsColor = FLinearColor::Red;
+		}
+		else
+		{
+			HUDPackage.CrosshairsColor = FLinearColor::White;
+		}
 	}
 }
 
