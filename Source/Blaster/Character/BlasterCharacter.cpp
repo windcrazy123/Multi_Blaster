@@ -12,6 +12,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
+#include "Blaster/Blaster.h"
 
 
 ABlasterCharacter::ABlasterCharacter()
@@ -39,6 +40,7 @@ ABlasterCharacter::ABlasterCharacter()
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+	GetMesh()->SetCollisionObjectType(ECC_SkeletalMesh);// blaster.h
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 
@@ -294,6 +296,24 @@ void ABlasterCharacter::PlayFireMontage(bool bIsAiming)
 		SectionName = bIsAiming ? FName("FireRifleAim") : FName("FireRifleHip");
 		AnimInstance->Montage_JumpToSection(SectionName, FireWeaponMontage);
 	}
+}
+
+void ABlasterCharacter::PlayHitReactMontage()
+{
+	//暂时只有拿着武器的受击动画
+	if (CombatComponent == nullptr || CombatComponent->EquippedWeapon == nullptr) return;
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && HitReactMontage)
+	{
+		AnimInstance->Montage_Play(HitReactMontage);
+		FName SectionName("FromLeft");
+		AnimInstance->Montage_JumpToSection(SectionName, HitReactMontage);
+	}
+}
+void ABlasterCharacter::MultiHitReact_Implementation()
+{
+	PlayHitReactMontage();
 }
 
 void ABlasterCharacter::TurnInPlace(float DeltaTime)
