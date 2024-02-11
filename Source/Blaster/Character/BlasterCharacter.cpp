@@ -83,6 +83,78 @@ void ABlasterCharacter::Tick(float DeltaTime)
 	 	OverlappingWeapon->ShowPickupWidget(true);
 	 }*/
 	AimOffset(DeltaTime);
+
+	if (IsLocallyControlled())
+	{
+		HideCameraIfCharacterClose();
+	}
+}
+
+// Tick
+void ABlasterCharacter::AimOffset(float DeltaTime)
+{
+	if (CombatComponent && CombatComponent->EquippedWeapon == nullptr) return;
+	
+	FVector Velocity = GetVelocity();
+	Velocity.Z = 0.f;
+	float Speed  = Velocity.Size();
+	bool bIsInAir = GetCharacterMovement()->IsFalling();
+
+	if (Speed == 0.f && !bIsInAir)
+	{
+		// GetBaseAimRotation 返回的数值是将pitch压缩至1字节并网络同步后解压缩的一个FRotator，此pitch取值范围是0~360
+		FRotator CurrentAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
+		FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, StartingAimRotation);
+		AO_Yaw = DeltaAimRotation.Yaw;
+		if (TurningInPlace == ETurningInPlace::ETIP_NotTurning)
+		{
+			InterpAOYaw = AO_Yaw;
+		}
+		//bUseControllerRotationYaw = false;
+
+		TurnInPlace(DeltaTime);
+	}
+	if (Speed>0.f || bIsInAir)
+	{
+		StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
+		AO_Yaw = 0.f;
+		//bUseControllerRotationYaw = true;
+
+		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+	}
+	AO_Pitch = GetBaseAimRotation().Pitch;
+	if (AO_Pitch > 90.f && !IsLocallyControlled())
+	{
+		// map pitch from [270, 360) to [-90, 0)
+		AO_Pitch -= 360.f;
+		// FVector2D InRange(270.f, 360.f);
+		// FVector2D OutRange(-90.f, 0.f);
+		// AO_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_Pitch);
+	}
+}
+
+//Tick(local)
+void ABlasterCharacter::HideCameraIfCharacterClose()
+{
+	//if(!IsLocallyControlled()) return;
+
+	//靠近则隐藏
+	if ((FollowCamera->GetComponentLocation() - GetActorLocation()).Size() < CameraThreashold)
+	{
+		GetMesh()->SetVisibility(false);
+		if (CombatComponent && CombatComponent->EquippedWeapon && CombatComponent->EquippedWeapon->GetWeaponMesh())
+		{
+			CombatComponent->EquippedWeapon->GetWeaponMesh()->SetOwnerNoSee(true);
+		}
+	}
+	else
+	{
+		GetMesh()->SetVisibility(true);
+		if (CombatComponent && CombatComponent->EquippedWeapon && CombatComponent->EquippedWeapon->GetWeaponMesh())
+		{
+			CombatComponent->EquippedWeapon->GetWeaponMesh()->SetOwnerNoSee(false);
+		}
+	}
 }
 
 // Called to bind functionality to input
@@ -149,7 +221,6 @@ void ABlasterCharacter::EquipButtonPressed()
 		}
 	}
 }
-
 void ABlasterCharacter::ServerEquipButtonPressed_Implementation()
 {
 	if (CombatComponent)
@@ -183,48 +254,6 @@ void ABlasterCharacter::AimButtonReleased()
 	if (CombatComponent)
 	{
 		CombatComponent->SetAiming(false);
-	}
-}
-
-void ABlasterCharacter::AimOffset(float DeltaTime)
-{
-	if (CombatComponent && CombatComponent->EquippedWeapon == nullptr) return;
-	
-	FVector Velocity = GetVelocity();
-	Velocity.Z = 0.f;
-	float Speed  = Velocity.Size();
-	bool bIsInAir = GetCharacterMovement()->IsFalling();
-
-	if (Speed == 0.f && !bIsInAir)
-	{
-		// GetBaseAimRotation 返回的数值是将pitch压缩至1字节并网络同步后解压缩的一个FRotator，此pitch取值范围是0~360
-		FRotator CurrentAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
-		FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, StartingAimRotation);
-		AO_Yaw = DeltaAimRotation.Yaw;
-		if (TurningInPlace == ETurningInPlace::ETIP_NotTurning)
-		{
-			InterpAOYaw = AO_Yaw;
-		}
-		//bUseControllerRotationYaw = false;
-
-		TurnInPlace(DeltaTime);
-	}
-	if (Speed>0.f || bIsInAir)
-	{
-		StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
-		AO_Yaw = 0.f;
-		//bUseControllerRotationYaw = true;
-
-		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
-	}
-	AO_Pitch = GetBaseAimRotation().Pitch;
-	if (AO_Pitch > 90.f && !IsLocallyControlled())
-	{
-		// map pitch from [270, 360) to [-90, 0)
-		AO_Pitch -= 360.f;
-		// FVector2D InRange(270.f, 360.f);
-		// FVector2D OutRange(-90.f, 0.f);
-		// AO_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_Pitch);
 	}
 }
 
