@@ -40,8 +40,12 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	//additive
 	bAiming = BlasterCharacter->IsAiming();
 	TurningInPlace = BlasterCharacter->GetTurningInPlace();
+	//smooth rotation for Proxies
+	bRotateRootBone = BlasterCharacter->ShouldRotateRootBone();
 
-	//equip move: Direction and Lean
+	/*
+	 *equip move: Direction and Lean
+	 */
 	FRotator AimRotation = BlasterCharacter->GetBaseAimRotation();// World Rotation
 	FRotator MovementRotationn = UKismetMathLibrary::MakeRotFromX(BlasterCharacter->GetVelocity());
 	//UE_LOG(LogTemp, Warning, TEXT("AimRotation Yaw: %f"), AimRotation.Yaw);
@@ -57,11 +61,15 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	const float Interp = FMath::FInterpTo(Lean, Target, DeltaSeconds, 5.f);
 	Lean = FMath::Clamp(Interp, -90.f, 90.f);
 
-	//aimoffset
+	/*
+	 *aimoffset
+	 */
 	AO_Yaw = BlasterCharacter->GetAOYaw();
 	AO_Pitch = BlasterCharacter->GetAOPitch();
 
-	//FABRIK : LeftHandTransform
+	/*
+	 *FABRIK : LeftHandTransform
+	 */
 	if (bWeaponEquipped && EquippedWeapon && EquippedWeapon->GetWeaponMesh() && BlasterCharacter->GetMesh())
 	{
 		LeftHandTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("LeftGrabSocket"), ERelativeTransformSpace::RTS_World);

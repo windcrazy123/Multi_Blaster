@@ -24,6 +24,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 
+	virtual void OnRep_ReplicatedMovement() override;
 protected:
 	virtual void BeginPlay() override;
 	
@@ -41,6 +42,7 @@ protected:
 	void FireButtonReleased();
 	
 	void PlayHitReactMontage();
+	void SimProxiesTurn();
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -81,6 +83,16 @@ private:
 	//相机靠近隐藏Character
 	void HideCameraIfCharacterClose();
 	float CameraThreashold = 200.f;
+
+	//Simulate Proxy smooth rotate
+	bool bRotateRootBone;
+	float TurnThreshold = 0.5f;
+	FRotator ProxyRotationLastFrame;
+	FRotator ProxyRotation;
+	float ProxyYaw;
+	float TimeSinceLastMovementReplication;
+	void CalculateAOPitch();
+	float CalculateSpeed();
 public:	
 	//FORCEINLINE void SetOverlappingWeapon(AWeapon* Weapon){ OverlappingWeapon = Weapon; }
 	void SetOverlappingWeapon(AWeapon* Weapon);
@@ -97,6 +109,7 @@ public:
 	FORCEINLINE float GetAOPitch() const { return AO_Pitch; }
 	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; }
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	FORCEINLINE bool ShouldRotateRootBone() const{ return bRotateRootBone; }
 
 	AWeapon* GetEquippedWeapon();
 	FVector GetHitTarget() const;

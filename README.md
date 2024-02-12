@@ -237,6 +237,10 @@ FVector_NetQuantize序列化会使用SerializePackedVector函数
 
 加速度InAccel使用FVector_NetQuantize10存储，位置ClientLoc使用FVector_NetQuantize100存储。
 
+## Simulate Proxy的旋转
+
+在做AimOffset的时候发现，骨骼的旋转在Simulate Proxy上有点抖，这是因为AimOffset在动画蓝图里旋转了骨骼，而动画蓝图在本地机子和服务器上是每帧调用的这样看起来没有问题，但是实际上Simulate Proxy并不是每帧更新的，并且它的更新还有网络更新的影响，这样就慢的多，因此Simulate Proxy会抖来抖去。
+
 # HUD 和 PlayerController
 
 APlayerController::GetHUD()
