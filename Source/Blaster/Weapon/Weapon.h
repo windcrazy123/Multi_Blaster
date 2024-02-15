@@ -59,6 +59,14 @@ public:
 	 */
 	FORCEINLINE float GetZoomedFOV() const { return ZoomedFOV; }
 	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomInterpSpeed; }
+
+	/*
+	 * Automatic Fire
+	 */
+	UPROPERTY(EditAnywhere, Category = CombatComponent)
+	float FireDelay = .15f;
+	UPROPERTY(EditAnywhere, Category = CombatComponent)
+	bool bAutomaticFire = true;
 protected:
 	virtual void BeginPlay() override;
 

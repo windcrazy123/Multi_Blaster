@@ -45,6 +45,8 @@ protected:
 
 	void SetHUDCrosshairs(float DeltaTime);
 private:
+	void Fire();
+	
 	class ABlasterCharacter* Character;
 	class ADCPlayerController* Controller;
 	class ADCHUD* HUD;
@@ -91,4 +93,16 @@ private:
 	float ZoomInterpSpeed = 20.f;
 
 	void InterpFOV(float DeltaTime);
+
+	/*
+	 * Automatic Fire
+	 */
+	FTimerHandle FireTimerHandle;
+
+	//在firedelay未结束时禁止开火(手动或自动)  同时这样也使非自动的武器有一个强制的禁止开火时间
+	bool bCanFire = true;
+	//设置并启动计时器
+	void StartFireTimer();
+	//计时器回调
+	void FireTimerFinished();
 };

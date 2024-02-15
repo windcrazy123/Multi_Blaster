@@ -5,7 +5,9 @@
 
 <!-- more -->
 
-## 网络概述
+# 网络概述
+
+![](.\ReadMeImg\GameFramework.png)
 
 遇到问题：UE版本5.2.1，character movement组件的Character Movement(Networking)中Network Smoothing Mode为Linear或Exponential时调用蓝图函数Set Capsule Half Height 会使得Mesh相对于根节点的位置重置
 
@@ -15,7 +17,7 @@ https://docs.unrealengine.com/4.27/zh-CN/InteractiveExperiences/Networking/Overv
 
 **相关性** 用于决定是否需要在多人游戏期间复制Actor。复制期间将剔除被认为不相关的actor。此操作可节约带宽，以便相关Actor可更加高效地复制。若Actor未被玩家拥有，且不在玩家附近，将其被视为不相关，而不会进行复制。不相关Actor会存在于服务器上，且会影响授权游戏状态，但在玩家靠近前不会向客户端发送信息。覆盖 IsNetRelevantFor 函数以手动控制相关性，并可使用 NetCullDistanceSquared 属性决定成为相关Actor所需距离。
 
-有时在游戏单帧内，没有足够带宽供复制所有相关Actor。因此，Actor拥有 **优先级（Priority****）** 值，用于决定优先复制的Actor。Pawn和PlayerController的 NetPriority 默认为 **3.0**，从而使其成为游戏中最高优先级的Actor，而基础Actor的 NetPriority 为 **1.0**。Actor在被复制前经历的时间越久，每次成功通过时所处的优先级便越高。
+有时在游戏单帧内，没有足够带宽供复制所有相关Actor。因此，Actor拥有 **优先级（Priority）** 值，用于决定优先复制的Actor。Pawn和PlayerController的 NetPriority 默认为 **3.0**，从而使其成为游戏中最高优先级的Actor，而基础Actor的 NetPriority 为 **1.0**。Actor在被复制前经历的时间越久，每次成功通过时所处的优先级便越高。
 
 在游戏中实现高效、稳定多人游戏系统的基本指南如下。
 
@@ -166,9 +168,7 @@ Simulate客户端收到的移动数据，相比移动刚发生时，理论上位
 
 加入预测后，Simulate客户端上角色移动落后就只有一个RTT了。
 
-
-
-![img](https://pic4.zhimg.com/80/v2-1b76a77b95c86a594a5997bd81033063_720w.webp)
+![img](.\ReadMeImg\Simulate客户端预测.png)
 
 **一个实现细节：关于FVector_NetQuantize**
 
@@ -184,11 +184,19 @@ FVector_NetQuantize数据结构有多个版本，我们常用的有FVector_NetQu
 
 FVector_NetQuantize序列化会使用SerializePackedVector函数
 
+```c++
+template<uint32 ScaleFactor, int32 MaxBitsPerComponent>
+bool SerializePackedVector(FVector &Vector, FArchive& Ar)
+{
+	if (Ar.IsSaving())
+	{
+		return  WritePackedVector<ScaleFactor, MaxBitsPerComponent>(Vector, Ar);
+	}
 
-
-![img](https://pic3.zhimg.com/80/v2-bcace5f4a2cb3d7c3523ea42a717f482_720w.webp)
-
-
+	ReadPackedVector<ScaleFactor, MaxBitsPerComponent>(Vector, Ar);
+	return true;
+}
+```
 
 函数接受两个模版参数，第一个是缩放大小，即10、100，第二个是转换成int后可使用的最大bit数，限制了表示范围。FVector_NetQuantize10在序列化时，两个参数分别为10和24，因此表示范围是2^24/10。
 
@@ -213,11 +221,7 @@ FVector_NetQuantize序列化会使用SerializePackedVector函数
 
 依次向数据流写入10和(2038, 2099, 3048)，此时数据流为：
 
-
-
-![img](https://pic4.zhimg.com/80/v2-9b296594060229425e4eb9ca818ed3c3_720w.webp)
-
-
+![img](.\ReadMeImg\数据流.png)
 
 总共使用了41位，原始的三个float需要128位，仅为其32%大小。留意10和2038的第一位0填充。
 
@@ -231,9 +235,12 @@ FVector_NetQuantize序列化会使用SerializePackedVector函数
 
 实际案例：ServerMove接口
 
-
-
-![img](https://pic4.zhimg.com/80/v2-a16c2bc0f012d4dcfd48fff0e94cd8b3_720w.webp)
+```c++
+void UCharacterMovementComponent::ServerMove_Implementation(
+	float TimeStamp,
+	FVector_NetQuantize10 InAccel,
+	FVector_NetQuantize100 ClientLoc,
+```
 
 加速度InAccel使用FVector_NetQuantize10存储，位置ClientLoc使用FVector_NetQuantize100存储。
 
@@ -246,3 +253,93 @@ FVector_NetQuantize序列化会使用SerializePackedVector函数
 APlayerController::GetHUD()
 AHUD::DrawHUD()
 AHUD::DrawTexture()
+
+# Rider使用
+
+## UE 编译时 PCH 虚拟内存不足的错误
+
+在多核 CPU 上编译 UE 时，可能比较频繁的遇到以下错误，尤其是编译的数量较多的时候：
+
+```ABAP
+0>c1xx: Error C3859 : 未能创建 PCH 的虚拟内存
+	c1xx: note: 系统返回代码 1455: 页面文件太小，无法完成操作。
+	c1xx: note: 请访问 https://aka.ms/pch-help 了解更多详情
+0>c1xx: Error C1076 : 编译器限制: 达到内部堆限制
+  Microsoft.MakeFile.targets(51, 5): [MSB3073] 命令“D:\UE_4.26\Engine\Build\BatchFiles\Rebuild.bat MyProjectEditor Win64 Development -Project="D:\UEProject\MultiGame\Multi_Test\MyProject.uproject" -WaitMutex -FromMsBuild”已退出，代码为 -1。
+```
+
+默认情况下，UE 会拉起系统最大线程数量的编译进程。就比如我电脑是16个
+
+![](.\ReadMeImg\16processes.png)
+
+UE 里每个编译任务的 `/zm` 值为 1000：[VCToolChain.cs?q=%2Fzm#L354](https://cs.github.com/EpicGames/UnrealEngine/blob/d11782b9046e9d0b130309591e4efc57f4b8b037/Engine/Source/Programs/UnrealBuildTool/Platform/Windows/VCToolChain.cs?q=/zm#L354)
+表示每个 cl 进程会分配 750M 的虚拟内存：[/Zm (Specify precompiled header memory allocation limit)](https://docs.microsoft.com/en-us/cpp/build/reference/zm-specify-precompiled-header-memory-allocation-limit?view=msvc-160)
+
+| Value of *`factor`* | Memory allocation limit |
+| :------------------ | :---------------------- |
+| 10                  | 7.5 MB                  |
+| 100                 | 75 MB                   |
+| 200                 | 150 MB                  |
+| 1000                | 750 MB                  |
+| 2000                | 1500 MB                 |
+
+如果ue使用的虚拟内存大于系统的虚拟内存，就会导致分配失败
+TaskCount ∗ PCHMemoryAllocationFactor > SystemVirtualMemery
+那么就有两种办法可以解决：一个是减少`TaskCount`，另一个就是减少`PCHMemoryAllocationFactor`。这两种办法都可以通过编辑`BuildConfiguration.xml`进行更改
+
+1. 减少TaskCount：[本地执行器和并行执行器](https://docs.unrealengine.com/4.27/en-US/ProductionPipelines/BuildTools/UnrealBuildTool/BuildConfiguration/#localexecutor)
+
+   ```xml
+   <LocalExecutor>
+   	<MaxProcessorCount>8</MaxProcessorCount>
+   </LocalExecutor>
+   <ParallelExecutor>
+   	<MaxProcessorCount>8</MaxProcessorCount>
+   </ParallelExecutor>
+   ```
+
+2. 减少PCHMemoryAllocationFactor：[WindowsPlatform->PCHMemoryAllocationFactor](https://docs.unrealengine.com/4.27/en-US/ProductionPipelines/BuildTools/UnrealBuildTool/BuildConfiguration/#windowsplatform)
+
+   ```xml
+   <WindowsPlatform>
+   	<PCHMemoryAllocationFactor>200</PCHMemoryAllocationFactor>
+   </WindowsPlatform>
+   ```
+
+### BuildConfiguration.xml
+
+除添加到 `Config/UnrealBuildTool` 文件夹中已生成UE4项目外，虚幻编译工具还会从以下位置（Windows系统）的XML配置文件读取设置：
+
+- Engine/Saved/UnrealBuildTool/BuildConfiguration.xml
+- User Folder/AppData/Roaming/Unreal Engine/UnrealBuildTool/BuildConfiguration.xml
+- My Documents/Unreal Engine/UnrealBuildTool/BuildConfiguration.xml
+
+如果是Linux和Mac，则会从以下路径读取：
+
+- /Users//.config//Unreal Engine/UnrealBuildTool/BuildConfiguration.xml
+- /Users//Unreal Engine/UnrealBuildTool/BuildConfiguration.xml
+
+### Finished
+
+```xml
+<?xml version="1.0" encoding="utf-8" ?>
+<Configuration xmlns="https://www.unrealengine.com/BuildConfiguration">
+    <WindowsPlatform>
+        <PCHMemoryAllocationFactor>200</PCHMemoryAllocationFactor>
+    </WindowsPlatform>
+    <LocalExecutor>
+        <MaxProcessorCount>8</MaxProcessorCount>
+    </LocalExecutor>
+    <ParallelExecutor>
+        <MaxProcessorCount>8</MaxProcessorCount>
+    </ParallelExecutor>
+</Configuration>
+```
+
+8*150MB = 1200MB（虽然我改为16也没有超过我系统的虚拟内存大小但还是报错了，**所以此内容可能有误**，但是我如此改完后确实不报错了）
+
+> 注：虚拟内存查看：我的电脑->属性->高级系统设置->高级->性能->设置->高级->虚拟内存
+>
+> 并且需要注意的是：如果 `/zm` 值设置的太小，可能无法满足 UE 合并翻译单元的要求，导致编译错误，所以，最好还是修改系统虚拟内存大小或者控制并行的任务数量。
+>
+> 参考：https://ue5wiki.com/wiki/5cc4f8a/
