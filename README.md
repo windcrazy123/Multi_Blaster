@@ -254,6 +254,10 @@ APlayerController::GetHUD()
 AHUD::DrawHUD()
 AHUD::DrawTexture()
 
+# PlayerState
+
+playerstate的网络更新较慢，Health变量放在这里不合适，放在Character里做成员变量即可
+
 # Rider使用
 
 ## UE 编译时 PCH 虚拟内存不足的错误

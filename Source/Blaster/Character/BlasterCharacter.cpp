@@ -59,6 +59,7 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	// #include "Net/UnrealNetwork.h"
 	DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly);
 	//DOREPLIFETIME(ABlasterCharacter, OverlappingWeapon);
+	DOREPLIFETIME(ABlasterCharacter, CurHealth);
 }
 
 void ABlasterCharacter::PostInitializeComponents()
@@ -420,6 +421,10 @@ void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 	{
 		LastWeapon->ShowPickupWidget(false);
 	}
+}
+
+void ABlasterCharacter::OnRep_Health()
+{
 }
 
 void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
