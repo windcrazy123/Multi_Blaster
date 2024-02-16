@@ -13,5 +13,12 @@ UCLASS()
 class BLASTER_API ADCPlayerController : public APlayerController
 {
 	GENERATED_BODY()
-	
+public:
+	void SetHudHealth(float CurHealth, float MaxHealth);
+
+protected:
+	virtual void BeginPlay() override;
+
+private:
+	class ADCHUD* DCHud;
 };

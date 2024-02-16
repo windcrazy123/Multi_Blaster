@@ -13,6 +13,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
 #include "Blaster/Blaster.h"
+#include "Blaster/PlayerController/DCPlayerController.h"
 
 
 ABlasterCharacter::ABlasterCharacter()
@@ -82,6 +83,12 @@ void ABlasterCharacter::OnRep_ReplicatedMovement()
 void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	DCPlayerController = Cast<ADCPlayerController>(Controller);
+	if (DCPlayerController)
+	{
+		DCPlayerController->SetHudHealth(CurHealth, MaxHealth);
+	}
 }
 
 void ABlasterCharacter::Tick(float DeltaTime)

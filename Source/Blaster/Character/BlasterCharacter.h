@@ -104,6 +104,8 @@ private:
 
 	UFUNCTION()
 	void OnRep_Health();
+
+	class ADCPlayerController* DCPlayerController;
 public:	
 	//FORCEINLINE void SetOverlappingWeapon(AWeapon* Weapon){ OverlappingWeapon = Weapon; }
 	void SetOverlappingWeapon(AWeapon* Weapon);
