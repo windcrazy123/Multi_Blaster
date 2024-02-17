@@ -114,6 +114,15 @@ private:
 	void OnRep_Health();
 
 	class ADCPlayerController* DCPlayerController;
+
+	/*
+	 * 血量归零时淘汰
+	*/
+	UPROPERTY(EditAnywhere, Category = CombatComponent)
+	UAnimMontage* ElimMontage;
+
+	bool bElimmed = false;
+	
 public:	
 	//FORCEINLINE void SetOverlappingWeapon(AWeapon* Weapon){ OverlappingWeapon = Weapon; }
 	void SetOverlappingWeapon(AWeapon* Weapon);
@@ -134,4 +143,13 @@ public:
 
 	AWeapon* GetEquippedWeapon();
 	FVector GetHitTarget() const;
+
+	/*
+	 * 血量归零时淘汰
+	 */
+	UFUNCTION(NetMulticast, Reliable)
+	void Eliminate();
+
+	void PlayElimMontage();
+	FORCEINLINE bool IsElimmed() const{ return bElimmed; }
 };

@@ -13,6 +13,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
 #include "Blaster/Blaster.h"
+#include "Blaster/GameMode/DCGameMode.h"
 #include "Blaster/PlayerController/DCPlayerController.h"
 
 
@@ -448,6 +449,21 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 	CurHealth = FMath::Clamp(CurHealth - Damage, 0.f, MaxHealth);
 	UpdateHUDHealth();
 	PlayHitReactMontage();
+
+	/*
+	 * 血量归零时淘汰
+	 */
+	if (CurHealth == 0.f)
+	{
+		ADCGameMode* DCGameMode = GetWorld()->GetAuthGameMode<ADCGameMode>();
+        if (DCGameMode)
+        {
+        	if(DCPlayerController == nullptr) DCPlayerController = Cast<ADCPlayerController>(Controller);
+	        ADCPlayerController* AttackerController = Cast<ADCPlayerController>(GetInstigatorController());
+        	//PlayerEliminated有检查
+	        DCGameMode->PlayerEliminated(this, DCPlayerController, AttackerController);
+        }
+	}
 }
 
 void ABlasterCharacter::UpdateHUDHealth()
@@ -499,4 +515,19 @@ FVector ABlasterCharacter::GetHitTarget() const
 {
 	if(CombatComponent == nullptr) return FVector();
 	return  CombatComponent->HitTarget;
+}
+
+void ABlasterCharacter::Eliminate_Implementation()
+{
+	bElimmed = true;
+	PlayElimMontage();
+}
+
+void ABlasterCharacter::PlayElimMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && ElimMontage)
+	{
+		AnimInstance->Montage_Play(ElimMontage);
+	}
 }

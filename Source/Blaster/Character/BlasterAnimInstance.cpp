@@ -42,6 +42,8 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	TurningInPlace = BlasterCharacter->GetTurningInPlace();
 	//smooth rotation for Proxies
 	bRotateRootBone = BlasterCharacter->ShouldRotateRootBone();
+	//血量归零时淘汰
+	bElimmed = BlasterCharacter->IsElimmed();
 
 	/*
 	 *equip move: Direction and Lean

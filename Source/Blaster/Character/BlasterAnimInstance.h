@@ -74,4 +74,8 @@ private:
 	//Simulate Proxy smooth rotate
 	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	bool bRotateRootBone;
+
+	//血量归零时淘汰
+	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
+	bool bElimmed;
 };
