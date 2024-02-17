@@ -60,6 +60,7 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	// #include "Net/UnrealNetwork.h"
 	DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly);
 	//DOREPLIFETIME(ABlasterCharacter, OverlappingWeapon);
+	
 	DOREPLIFETIME(ABlasterCharacter, CurHealth);
 }
 
@@ -84,10 +85,11 @@ void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	DCPlayerController = Cast<ADCPlayerController>(Controller);
-	if (DCPlayerController)
+	UpdateHUDHealth();
+
+	if (HasAuthority())
 	{
-		DCPlayerController->SetHudHealth(CurHealth, MaxHealth);
+		OnTakeAnyDamage.AddDynamic(this, &ABlasterCharacter::ReceiveDamage);
 	}
 }
 
@@ -412,10 +414,10 @@ void ABlasterCharacter::PlayHitReactMontage()
 		AnimInstance->Montage_JumpToSection(SectionName, HitReactMontage);
 	}
 }
-void ABlasterCharacter::MultiHitReact_Implementation()
-{
-	PlayHitReactMontage();
-}
+/* void ABlasterCharacter::MultiHitReact_Implementation()
+// {
+// 	PlayHitReactMontage();
+// }*/
 
 //rep notify只有一条路，即：服务器到客户端，因此不会给服务器发送通知，也就是说服务器不会被调用到此方法
 void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
@@ -432,6 +434,29 @@ void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 
 void ABlasterCharacter::OnRep_Health()
 {
+	if(IsLocallyControlled())
+	{
+		UpdateHUDHealth();
+	}
+	
+	PlayHitReactMontage();
+}
+
+void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType,
+	AController* InstigatedBy, AActor* DamageCauser)
+{
+	CurHealth = FMath::Clamp(CurHealth - Damage, 0.f, MaxHealth);
+	UpdateHUDHealth();
+	PlayHitReactMontage();
+}
+
+void ABlasterCharacter::UpdateHUDHealth()
+{
+	if(DCPlayerController == nullptr) DCPlayerController = Cast<ADCPlayerController>(Controller);
+	if (DCPlayerController)
+	{
+		DCPlayerController->SetHudHealth(CurHealth, MaxHealth);
+	}
 }
 
 void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)

@@ -44,6 +44,14 @@ protected:
 	void PlayHitReactMontage();
 	void SimProxiesTurn();
 
+	/*
+	 * Player Health
+	 */
+	UFUNCTION()
+	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
+
+	void UpdateHUDHealth();
+	
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	class UCameraComponent* FollowCamera;
@@ -112,8 +120,8 @@ public:
 	
 	void PlayFireMontage(bool bIsAiming);
 	
-	UFUNCTION(NetMulticast, Unreliable)
-	void MultiHitReact();
+	// UFUNCTION(NetMulticast, Unreliable)  //removed into ReceiveDamage, because ReplicatedNotify is better than RPC
+	// void MultiHitReact();
 
 	bool IsWeaponEquipped();
 	bool IsAiming();
