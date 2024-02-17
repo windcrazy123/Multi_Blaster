@@ -122,6 +122,11 @@ private:
 	UAnimMontage* ElimMontage;
 
 	bool bElimmed = false;
+
+	FTimerHandle ElimTimer;
+	void ElimTimerFinished();
+	UPROPERTY(EditDefaultsOnly)
+	float ElimDelay = 3.f;
 	
 public:	
 	//FORCEINLINE void SetOverlappingWeapon(AWeapon* Weapon){ OverlappingWeapon = Weapon; }
@@ -147,8 +152,9 @@ public:
 	/*
 	 * 血量归零时淘汰
 	 */
-	UFUNCTION(NetMulticast, Reliable)
 	void Eliminate();
+	UFUNCTION(NetMulticast, Reliable)
+	void MultiEliminate();
 
 	void PlayElimMontage();
 	FORCEINLINE bool IsElimmed() const{ return bElimmed; }

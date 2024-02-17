@@ -18,4 +18,6 @@ public:
 	 * 血量归零时淘汰
 	 */
 	virtual void PlayerEliminated(class ABlasterCharacter* ElimmedCharacter, class ADCPlayerController* VictimController, ADCPlayerController* AttackerController);
+	//重生
+	virtual void RequestRespawn(ACharacter* ElimmedCharacter, AController* ElimmedController);
 };

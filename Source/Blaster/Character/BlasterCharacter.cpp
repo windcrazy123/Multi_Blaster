@@ -21,6 +21,9 @@ ABlasterCharacter::ABlasterCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
+	//蓝图中Character的ClassDefault中Actor->SpawnCollisionHandling改为调整但总是生成
+	SpawnCollisionHandlingMethod = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+	
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("MyCameraBoom"));
 	CameraBoom->SetupAttachment(GetMesh());
 	CameraBoom->TargetArmLength = 600.f;
@@ -85,7 +88,7 @@ void ABlasterCharacter::OnRep_ReplicatedMovement()
 void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
+UE_LOG(LogTemp, Warning, TEXT("beginplay"));
 	UpdateHUDHealth();
 
 	if (HasAuthority())
@@ -443,6 +446,7 @@ void ABlasterCharacter::OnRep_Health()
 	PlayHitReactMontage();
 }
 
+//on server
 void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType,
 	AController* InstigatedBy, AActor* DamageCauser)
 {
@@ -467,7 +471,7 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 }
 
 void ABlasterCharacter::UpdateHUDHealth()
-{
+{UE_LOG(LogTemp, Warning, TEXT("sethud"));
 	if(DCPlayerController == nullptr) DCPlayerController = Cast<ADCPlayerController>(Controller);
 	if (DCPlayerController)
 	{
@@ -517,7 +521,14 @@ FVector ABlasterCharacter::GetHitTarget() const
 	return  CombatComponent->HitTarget;
 }
 
-void ABlasterCharacter::Eliminate_Implementation()
+//on server
+void ABlasterCharacter::Eliminate()
+{
+	MultiEliminate();
+	GetWorldTimerManager().SetTimer(ElimTimer, this, &ABlasterCharacter::ElimTimerFinished, ElimDelay);
+}
+
+void ABlasterCharacter::MultiEliminate_Implementation()
 {
 	bElimmed = true;
 	PlayElimMontage();
@@ -529,5 +540,14 @@ void ABlasterCharacter::PlayElimMontage()
 	if (AnimInstance && ElimMontage)
 	{
 		AnimInstance->Montage_Play(ElimMontage);
+	}
+}
+//淘汰倒计时结束：重生
+void ABlasterCharacter::ElimTimerFinished()
+{
+	ADCGameMode* DCGameMode = GetWorld()->GetAuthGameMode<ADCGameMode>();
+	if (DCGameMode)
+	{
+		DCGameMode->RequestRespawn(this, Controller);
 	}
 }
