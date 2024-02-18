@@ -177,15 +177,6 @@ void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming)
 	}
 }
 
-void UCombatComponent::OnRep_EquippedWeapon()
-{
-	if (EquippedWeapon && Character)
-	{
-		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
-		Character->bUseControllerRotationYaw = true;
-	}
-}
-
 //Fire
 void UCombatComponent::FireButtonPressed(bool bPressed)
 {
@@ -300,17 +291,25 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& HitResult)
 	}
 }
 
+//server
 void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 {
 	if (Character == nullptr || WeaponToEquip == nullptr)
 		return;
 	EquippedWeapon = WeaponToEquip;
+
+	/*网络和attachactor不一定
+	 * 设置武器状态和附着Actor会传播到客户端，但是不能保证是哪一个先到达客户端，为了避免这种假设，可以在OnRep_EquippedWeapon中AttachActor以直接在客户端调用
+	 * 但是，SetWeaponState中会处理武器模拟物理的状态，如果在模拟物理时，是没有办法捡起武器的
+	 * 所以SetWeaponState和AttachActor这两种函数都要放在OnRep_EquippedWeapon中
+	 */
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
 	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
 	if (HandSocket)
 	{
 		HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
 	}
+	
 	/* Actor.h
 	 *UPROPERTY(ReplicatedUsing=OnRep_Owner)
 	AActor* Owner;*/
@@ -318,5 +317,21 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;
+}
+void UCombatComponent::OnRep_EquippedWeapon()
+{
+	if (EquippedWeapon && Character)
+	{
+		//网络和attachactor不一定，所以在这里复制了
+		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+		const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
+		if (HandSocket)
+		{
+			HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
+		}
+		
+		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
+		Character->bUseControllerRotationYaw = true;
+	}
 }
 

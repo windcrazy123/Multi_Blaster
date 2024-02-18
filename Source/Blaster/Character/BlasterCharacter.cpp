@@ -526,6 +526,10 @@ FVector ABlasterCharacter::GetHitTarget() const
 //on server
 void ABlasterCharacter::Eliminate()
 {
+	if (CombatComponent && CombatComponent->EquippedWeapon)
+	{
+		CombatComponent->EquippedWeapon->Drop();
+	}
 	MultiEliminate();
 	GetWorldTimerManager().SetTimer(ElimTimer, this, &ABlasterCharacter::ElimTimerFinished, ElimDelay);
 }
@@ -545,6 +549,17 @@ void ABlasterCharacter::MultiEliminate_Implementation()
 		//DynamicDissolveMaterialInstance->SetScalarParameterValue(FName("Glow"), 200.f);
 	}
 	StartDissolve();
+
+	//disable character movement
+	GetCharacterMovement()->DisableMovement();//MOVE_NONE 没办法wasd
+	GetCharacterMovement()->StopMovementImmediately();//把旋转角色也禁用了
+	if (DCPlayerController)
+	{
+		DisableInput(DCPlayerController);
+	}
+	//disable collision
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void ABlasterCharacter::PlayElimMontage()

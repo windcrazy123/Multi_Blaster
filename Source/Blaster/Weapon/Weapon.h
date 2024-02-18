@@ -67,6 +67,8 @@ public:
 	float FireDelay = .15f;
 	UPROPERTY(EditAnywhere, Category = CombatComponent)
 	bool bAutomaticFire = true;
+
+	void Drop();
 protected:
 	virtual void BeginPlay() override;
 
