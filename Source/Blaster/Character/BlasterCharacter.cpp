@@ -298,6 +298,7 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAction("Aim",IE_Released,this,&ABlasterCharacter::AimButtonReleased);
 	PlayerInputComponent->BindAction("Fire",IE_Pressed,this,&ABlasterCharacter::FireButtonPressed);
 	PlayerInputComponent->BindAction("Fire",IE_Released,this,&ABlasterCharacter::FireButtonReleased);
+	PlayerInputComponent->BindAction("Reload",IE_Released,this,&ABlasterCharacter::ReloadButtonPressed);
 	
 	PlayerInputComponent->BindAxis("MoveForward",this,&ABlasterCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight",this,&ABlasterCharacter::MoveRight);
@@ -408,6 +409,14 @@ void ABlasterCharacter::FireButtonReleased()
 	if (CombatComponent)
 	{
 		CombatComponent->FireButtonPressed(false);
+	}
+}
+
+void ABlasterCharacter::ReloadButtonPressed()
+{
+	if (CombatComponent)
+	{
+		CombatComponent->Reload();
 	}
 }
 
@@ -598,6 +607,30 @@ void ABlasterCharacter::PlayElimMontage()
 		AnimInstance->Montage_Play(ElimMontage);
 	}
 }
+
+void ABlasterCharacter::PlayReloadMontage()
+{
+	if (CombatComponent == nullptr || CombatComponent->EquippedWeapon == nullptr) return;
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && ReloadMontage)
+	{
+		AnimInstance->Montage_Play(ReloadMontage);
+		FName SectionName;
+
+		switch (CombatComponent->EquippedWeapon->GetWeaponType())
+		{
+		case EWeaponType::EWT_AssaultRifle:
+			SectionName = FName("Rifle");
+			break;
+		default:
+			SectionName = FName("Rifle");
+			break;
+		}
+		AnimInstance->Montage_JumpToSection(SectionName, ReloadMontage);
+	}
+}
+
 //淘汰倒计时结束：重生
 void ABlasterCharacter::ElimTimerFinished()
 {

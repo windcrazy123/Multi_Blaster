@@ -41,6 +41,7 @@ protected:
 	virtual void Jump() override;
 	void FireButtonPressed();
 	void FireButtonReleased();
+	void ReloadButtonPressed();
 	
 	void PlayHitReactMontage();
 	void SimProxiesTurn();
@@ -164,6 +165,13 @@ private:
 	 */
 	UPROPERTY()//一方面防止访问垃圾指针另一方面通知虚幻构建工具自动生成对象与虚幻垃圾收集系统正常工作所需的代码，指针都要进行管理
 	class ADCPlayerState* DCPlayerState;
+
+	/*
+	 * Reload
+	 */
+	UPROPERTY(EditAnywhere, Category = CombatComponent)
+	UAnimMontage* ReloadMontage;
+	
 public:	
 	//FORCEINLINE void SetOverlappingWeapon(AWeapon* Weapon){ OverlappingWeapon = Weapon; }
 	void SetOverlappingWeapon(AWeapon* Weapon);
@@ -200,4 +208,9 @@ public:
 	 */
 	FORCEINLINE float GetCurHealth() const{ return CurHealth; }
 	FORCEINLINE float GetMaxHealth() const{ return MaxHealth; }
+
+	/*
+	 * Reload
+	 */
+	void PlayReloadMontage();
 };

@@ -26,6 +26,7 @@ public:
 	
 
 	void EquipWeapon(class AWeapon* WeaponToEquip);
+	void Reload();
 protected:
 	virtual void BeginPlay() override;
 
@@ -45,6 +46,11 @@ protected:
 	void TraceUnderCrosshairs(FHitResult& HitResult);
 
 	void SetHUDCrosshairs(float DeltaTime);
+	/*
+	 * Reload
+	 */
+	UFUNCTION(Server, Reliable)
+	void ServerReload();
 private:
 	void Fire();
 
