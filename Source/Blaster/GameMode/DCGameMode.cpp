@@ -4,12 +4,21 @@
 #include "DCGameMode.h"
 
 #include "Blaster/Character/BlasterCharacter.h"
+#include "Blaster/PlayerController/DCPlayerController.h"
+#include "Blaster/PlayerState/DCPlayerState.h"
 #include "GameFramework/PlayerStart.h"
 #include "Kismet/GameplayStatics.h"
 
 void ADCGameMode::PlayerEliminated(ABlasterCharacter* ElimmedCharacter, ADCPlayerController* VictimController,
                                    ADCPlayerController* AttackerController)
 {
+	ADCPlayerState* AttackerPlayerState = AttackerController ? Cast<ADCPlayerState>(AttackerController->PlayerState) : nullptr;
+	ADCPlayerState* VictimPlayerState = VictimController ? Cast<ADCPlayerState>(VictimController->PlayerState) : nullptr;
+	if (AttackerPlayerState && AttackerPlayerState != VictimPlayerState)
+	{
+		AttackerPlayerState->AddToScore(1.f);
+	}
+	
 	if (ElimmedCharacter)
 	{
 		ElimmedCharacter->Eliminate();

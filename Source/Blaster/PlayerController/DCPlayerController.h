@@ -19,6 +19,8 @@ public:
 	
 	void SetHudHealth(float CurHealth, float MaxHealth);
 
+	void SetHudScore(float Score);
+
 protected:
 	virtual void BeginPlay() override;
 

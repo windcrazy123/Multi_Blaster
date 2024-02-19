@@ -347,3 +347,62 @@ TaskCount ∗ PCHMemoryAllocationFactor > SystemVirtualMemery
 > 并且需要注意的是：如果 `/zm` 值设置的太小，可能无法满足 UE 合并翻译单元的要求，导致编译错误，所以，最好还是修改系统虚拟内存大小或者控制并行的任务数量。
 >
 > 参考：https://ue5wiki.com/wiki/5cc4f8a/
+
+# Garbage Collection
+
+在写`ADCPlayerState`时出现可能由于访问GC悬空 Actor 指针而导致崩溃，因此查阅文档写了此篇。
+
+过时原始指针的问题在于，仅检查 ActorPtr != nullptr 是不够的，过时指针将返回 true，但实际上不会仍然指向有效的 AActor，这就是导致崩溃的原因。
+
+> 参考：[Garbage Collection](https://unrealcommunity.wiki/617b2a2c65f766208636d23d)
+>
+> [如何防止由于悬空 Actor 指针而导致崩溃](https://unreal.gg-labs.com/wiki-archives/common-pitfalls/how-to-prevent-crashes-due-to-dangling-actor-pointers)
+
+## 垃圾回收简介
+
+这是你可能已经使用过的许多现代语言（C#、Python、Javascript 等）的一个功能，因此你可能用过但不知情。在垃圾回收的环境中，对象在停止使用后会自动从内存中删除。这意味着你可以创建一个新对象，然后使用它一段时间，当使用完它时，将指向它的变量设置为 null。在幕后，垃圾回收器（“GC”）会跟踪哪些对象仍在使用。当不再使用某个对象时，垃圾收集器会自动释放内存。
+
+C 和 C++ 等较低级语言不提供现成的垃圾收集器。这意味着你必须手动跟踪正在使用的内存，并在不再希望使用它时释放它。这可能容易出现错误，并且让程序更难管理，因此虚幻引擎创建了自己的垃圾收集系统。
+
+## UE4中垃圾收集是如何工作的（技术讲解）
+
+当 UObject 派生对象被实例化时，它会在虚幻引擎的垃圾收集系统中注册。垃圾收集系统每 30-60 秒自动运行一次（或更短时间，具体取决于系统上剩余的可用内存量，你也可以在Project Settings->Engine-Garbage Collection中设置它），并查找不再使用的任何对象并将其删除。这样做的方式是 GC 系统有一个它知道应该永久存活的对象的“根集”。 GC 系统使用反射（C++ 缺乏的另一个功能，UE 也构建在该语言之上）来查看对象的属性并跟踪对其他对象的引用，然后是这些对象的属性等。
+
+如果通过遍历其他对象找到一个对象，并且这些对象之一包含在根集中，则该对象被认为是可达的并保持活动状态。一旦 GC 遍历完每个对象，如果无法通过查看引用来访问根集中的对象，则该对象将被视为无法访问并标记为垃圾回收。当一个对象被垃圾收集时，代表它的内存被释放并返回给系统。**任何指向该对象的指针都将被设置为 null**，如果您尝试使用它们，将会导致崩溃。如果你正确使用 UE4 的装饰器，你应该永远不会遇到这个问题。
+
+## 如何编写使用 Unreal GC 系统的 C++ 代码？
+
+首先要注意的是，了解何时需要担心垃圾收集非常重要。如果函数内部有指针，则不必担心垃圾收集系统。函数内部的这些指针的行为与普通 C/C++ 指针类似，不需要任何更改。
+
+```cpp
+void AMyClass::CheckIfWeHaveOwner() { 
+// Get a pointer to our Owner 
+AActor* MyOwner = GetOwner(); 
+if(IsValid(MyOwner)) 
+{ // Do something. 
+} }
+```
+
+但是，如果你想要一个指向对象的指针并使其存在超过一帧，则需要通过以下两种方式之一存储它：
+
+1. **该指针必须存储为类中的成员变量，并且必须在其前面添加 UPROPERTY(...) 宏。** `UPROPERTY()` 内部的内容有很多变体，但你不需要其中任何一个变体来让垃圾收集系统考虑其后面的引用。
+
+```cpp
+UCLASS() 
+class AMyClass : public AActor 
+{ GENERATED_BODY() 
+private: 
+// UPROPERTY() declares that you want MyReferenceToAnotherActor to be considered by the Garbage Collection system. 
+UPROPERTY() 
+AActor* MyReferenceToAnotherActor; }
+```
+
+只需在 AActor 指针之前添加 UPROPERTY() 宏，你就可以通知虚幻构建工具自动生成对象与虚幻垃圾收集系统正常工作所需的代码。 UPROPERTY() 宏只能用于从“UObject”驱动的类。如果需要管理非虚幻 C++ 类(比如第三方的API)的内存，你将要手动管理内存
+
+2. **使用 TWeakObjectPtr/FWeakObjectPtr** 不会使对象保持活动状态，但在对象被销毁后调用这两种数据类型的 IsValid 方法时会自动开始返回 false。
+
+这对于保留对另一个对象的引用并查看该引用是否仍然有效非常有用，而无需实际表示你要负责保持该对象处于活动状态。这通常被认为是高级用例，并且大多数时候不需要。
+
+## 我如何决定手动销毁某些东西？
+
+从 AActor 类派生的对象（从 UObject 派生，因此可以成为 GC 系统的一部分）实现 Destroy 函数。当你摧毁一个演员时，它会在帧结束时将自己从世界中删除。这意味着它将继续存在（并且指针仍然有效）直到帧结束，此时当它被删除时它们将变为空。您经常会遇到需要知道指向对象的指针是否仍然有效以及该对象是否未被销毁的情况。您可以使用 `IsValid(...)` 函数来完成此操作，在该函数中传递一个指向对象的指针。如果指针为 `nullptr` 或者已对该对象调用 `Destroy()` 并且该对象尚未从世界中删除，则 `IsValid()` 将返回 false。

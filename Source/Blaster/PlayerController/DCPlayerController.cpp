@@ -40,3 +40,14 @@ void ADCPlayerController::SetHudHealth(float CurHealth, float MaxHealth)
 		DCHud->CharacterOverlay->HealthText->SetText(FText::FromString(HealthText));
 	}
 }
+
+void ADCPlayerController::SetHudScore(float Score)
+{
+	if(DCHud == nullptr) DCHud = Cast<ADCHUD>(GetHUD());
+
+	if(DCHud && DCHud->CharacterOverlay && DCHud->CharacterOverlay->ScoreAmount)
+	{
+		FString ScoreText = FString::Printf(TEXT("%d"), FMath::FloorToInt(Score));
+		DCHud->CharacterOverlay->ScoreAmount->SetText(FText::FromString(ScoreText));
+	}
+}

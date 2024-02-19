@@ -15,6 +15,7 @@
 #include "Blaster/Blaster.h"
 #include "Blaster/GameMode/DCGameMode.h"
 #include "Blaster/PlayerController/DCPlayerController.h"
+#include "Blaster/PlayerState/DCPlayerState.h"
 
 
 ABlasterCharacter::ABlasterCharacter()
@@ -135,8 +136,22 @@ void ABlasterCharacter::Tick(float DeltaTime)
 	{
 		HideCameraIfCharacterClose();
 	}
+
+	PollInit();
 }
 
+void ABlasterCharacter::PollInit()
+{
+	//不知道PlayerState什么时候能初始化，所以在tick中不断尝试进行初始化
+	if (PlayerState == nullptr)
+	{
+		PlayerState = GetPlayerState<ADCPlayerState>();
+		if (PlayerState)
+		{
+			PlayerState->AddToScore(0.f);
+		}
+	}
+}
 //Tick(Simulate Proxy)
 void ABlasterCharacter::SimProxiesTurn()
 {
@@ -467,7 +482,8 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
         if (DCGameMode)
         {
         	if(DCPlayerController == nullptr) DCPlayerController = Cast<ADCPlayerController>(Controller);
-	        ADCPlayerController* AttackerController = Cast<ADCPlayerController>(GetInstigatorController());
+	        //ADCPlayerController* AttackerController = Cast<ADCPlayerController>(GetInstigatorController());
+	        ADCPlayerController* AttackerController = Cast<ADCPlayerController>(InstigatedBy);
         	//PlayerEliminated有检查
 	        DCGameMode->PlayerEliminated(this, DCPlayerController, AttackerController);
         }
@@ -562,6 +578,8 @@ void ABlasterCharacter::MultiEliminate_Implementation()
 	//disable collision
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	//
+	//SetCanBeDamaged(false);
 }
 
 void ABlasterCharacter::PlayElimMontage()

@@ -52,6 +52,12 @@ protected:
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
 
 	void UpdateHUDHealth();
+
+	/*
+	 * Score
+	 */
+	//Poll for any relevant classes and init our HUD
+	void PollInit();
 	
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -151,7 +157,11 @@ private:
 	// Material instance set on the *Blueprint*, used with the Dynamic Material Instance
 	UPROPERTY(EditAnywhere, Category = Elimination)
 	UMaterialInstance* DissolveMaterialInstance;	
-	
+
+	/*
+	 * Score
+	 */
+	class ADCPlayerState* PlayerState;
 public:	
 	//FORCEINLINE void SetOverlappingWeapon(AWeapon* Weapon){ OverlappingWeapon = Weapon; }
 	void SetOverlappingWeapon(AWeapon* Weapon);
