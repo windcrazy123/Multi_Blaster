@@ -65,12 +65,22 @@ void ADCPlayerController::SetHUDDefeats(int32 Defeats)
 
 void ADCPlayerController::SetHUDWeaponAmmo(int32 Ammo)
 {
-	UE_LOG(LogTemp, Warning, TEXT("SetHUDWeaponAmmo"));
 	if(DCHud == nullptr) DCHud = Cast<ADCHUD>(GetHUD());
 
 	if(DCHud && DCHud->CharacterOverlay && DCHud->CharacterOverlay->WeaponAmmoAmount)
 	{
 		FString AmmoText = FString::Printf(TEXT("%d"), Ammo);
 		DCHud->CharacterOverlay->WeaponAmmoAmount->SetText(FText::FromString(AmmoText));
+	}
+}
+
+void ADCPlayerController::SetHUDCarriedAmmo(int32 Ammo)
+{
+	if(DCHud == nullptr) DCHud = Cast<ADCHUD>(GetHUD());
+
+	if(DCHud && DCHud->CharacterOverlay && DCHud->CharacterOverlay->CarriedAmmoAmount)
+	{
+		FString AmmoText = FString::Printf(TEXT("%d"), Ammo);
+		DCHud->CharacterOverlay->CarriedAmmoAmount->SetText(FText::FromString(AmmoText));
 	}
 }

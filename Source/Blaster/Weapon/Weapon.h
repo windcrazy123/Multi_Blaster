@@ -3,7 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
+#include "WeaponTypes.h"
 #include "GameFramework/Actor.h"
+
 #include "Weapon.generated.h"
 
 //we can use this enum as a type in blueprints
@@ -75,6 +78,8 @@ public:
 	void SetHUDAmmo();
 
 	FORCEINLINE bool IsEmpty() const { return Ammo <= 0; }
+
+	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
 	
 protected:
 	virtual void BeginPlay() override;
@@ -145,6 +150,7 @@ private:
 	UPROPERTY()
 	class ADCPlayerController* OwnerController;
 
-	
+	UPROPERTY(EditAnywhere)
+	EWeaponType WeaponType;
 	
 };

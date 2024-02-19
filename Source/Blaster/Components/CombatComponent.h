@@ -6,6 +6,7 @@
 #include "Components/ActorComponent.h"
 
 #include "Blaster/HUD/DCHUD.h"
+#include "Blaster/Weapon/WeaponTypes.h"
 
 #include "CombatComponent.generated.h"
 
@@ -112,4 +113,20 @@ private:
 	//检查EquippedWeapon和子弹和bCanFire和bFireButtonPressed
 	//子弹用完时禁止开火
 	bool CanFire();
+
+	/*
+	 * 携带子弹数
+	 */
+	//指携带的当前武器种类所属子弹类型的数量
+	UPROPERTY(ReplicatedUsing = OnRep_CarriedAmmo)
+	int32 CarriedAmmo;
+	UFUNCTION()
+	void OnRep_CarriedAmmo();
+
+	TMap<EWeaponType, int32> CarriedAmmoMap;
+
+	UPROPERTY(EditAnywhere)
+	int32 StartingARAmmo = 30;
+
+	void InitializeCarriedAmmo();
 };
