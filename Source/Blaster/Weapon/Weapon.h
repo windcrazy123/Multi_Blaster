@@ -69,6 +69,11 @@ public:
 	bool bAutomaticFire = true;
 
 	void Drop();
+
+	//Ammo
+	virtual void OnRep_Owner() override;
+	void SetHUDAmmo();
+	
 protected:
 	virtual void BeginPlay() override;
 
@@ -119,4 +124,25 @@ private:
 	float ZoomedFOV = 30.f;
 	UPROPERTY(EditAnywhere)
 	float ZoomInterpSpeed = 20.f;
+
+	/*
+	 * Ammo
+	 */
+	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
+	int32 Ammo;
+	
+	void SpendRound();
+	UFUNCTION()
+	void OnRep_Ammo();
+	
+	UPROPERTY(EditAnywhere)
+	int32 MagCapacity;
+
+	UPROPERTY()
+	class ABlasterCharacter* OwnerCharacter;
+	UPROPERTY()
+	class ADCPlayerController* OwnerController;
+
+	
+	
 };

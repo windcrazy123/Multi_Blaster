@@ -7,6 +7,7 @@
 #include "Components/WidgetComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "BulletShell.h"
+#include "Blaster/PlayerController/DCPlayerController.h"
 #include "Engine/SkeletalMeshSocket.h"
 
 AWeapon::AWeapon()
@@ -62,6 +63,7 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AWeapon, WeaponState);
+	DOREPLIFETIME(AWeapon, Ammo);
 }
 
 void AWeapon::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -166,6 +168,9 @@ void AWeapon::Fire(const FVector& HitTarget)
 			}
 		}
 	}
+
+	//Ammo
+	SpendRound();
 }
 
 void AWeapon::Drop()
@@ -176,4 +181,48 @@ void AWeapon::Drop()
 	WeaponMesh->DetachFromComponent(DetachmentTransformRules);
 
 	SetOwner(nullptr);
+	
+	OwnerCharacter = nullptr;
+	OwnerController = nullptr;
 }
+
+void AWeapon::OnRep_Owner()
+{
+	Super::OnRep_Owner();
+
+	if (GetOwner() == nullptr)
+	{
+		OwnerCharacter = nullptr;
+		OwnerController = nullptr;
+	}
+	else
+	{
+		SetHUDAmmo();
+	}
+}
+
+void AWeapon::SpendRound()
+{
+	--Ammo;
+
+	SetHUDAmmo();
+}
+
+void AWeapon::OnRep_Ammo()
+{
+	SetHUDAmmo();
+}
+
+void AWeapon::SetHUDAmmo()
+{
+	if(OwnerCharacter == nullptr) OwnerCharacter = Cast<ABlasterCharacter>(GetOwner());
+	if (OwnerCharacter)
+	{
+		if(OwnerController == nullptr) OwnerController = Cast<ADCPlayerController>(OwnerCharacter->Controller);
+		if (OwnerController)
+		{
+			OwnerController->SetHUDWeaponAmmo(Ammo);
+		}
+	}
+}
+

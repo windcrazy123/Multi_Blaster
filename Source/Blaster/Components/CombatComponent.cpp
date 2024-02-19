@@ -296,6 +296,10 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 {
 	if (Character == nullptr || WeaponToEquip == nullptr)
 		return;
+	if (EquippedWeapon)
+	{
+		EquippedWeapon->Drop();
+	}
 	EquippedWeapon = WeaponToEquip;
 
 	/*网络和attachactor不一定
@@ -314,6 +318,8 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	 *UPROPERTY(ReplicatedUsing=OnRep_Owner)
 	AActor* Owner;*/
 	EquippedWeapon->SetOwner(Character);
+	//Server SetOwner then SetHUDAmmo, use OnRep_Owner on weapon call SetHUDAmmo on all client
+	EquippedWeapon->SetHUDAmmo();
 
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;

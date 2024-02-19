@@ -18,10 +18,9 @@ public:
 
 	
 	void SetHudHealth(float CurHealth, float MaxHealth);
-
 	void SetHudScore(float Score);
-
 	void SetHUDDefeats(int32 Defeats);
+	void SetHUDWeaponAmmo(int32 Ammo);
 
 protected:
 	virtual void BeginPlay() override;

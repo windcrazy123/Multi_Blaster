@@ -549,12 +549,19 @@ void ABlasterCharacter::Eliminate()
 	{
 		CombatComponent->EquippedWeapon->Drop();
 	}
+	//equipweapon利用之后的setowner的notify进行多播SetHUDAmmo();，淘汰就利用下面多播
 	MultiEliminate();
 	GetWorldTimerManager().SetTimer(ElimTimer, this, &ABlasterCharacter::ElimTimerFinished, ElimDelay);
 }
 
 void ABlasterCharacter::MultiEliminate_Implementation()
 {
+	//Ammo
+	if (DCPlayerController)
+	{
+		DCPlayerController->SetHUDWeaponAmmo(0);
+	}
+	
 	bElimmed = true;
 	PlayElimMontage();
 
