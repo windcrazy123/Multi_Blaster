@@ -182,4 +182,10 @@ public:
 
 	void PlayElimMontage();
 	FORCEINLINE bool IsElimmed() const{ return bElimmed; }
+
+	/*
+	 * Player Health
+	 */
+	FORCEINLINE float GetCurHealth() const{ return CurHealth; }
+	FORCEINLINE float GetMaxHealth() const{ return MaxHealth; }
 };

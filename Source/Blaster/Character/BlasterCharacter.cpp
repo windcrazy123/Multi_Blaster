@@ -90,7 +90,9 @@ void ABlasterCharacter::OnRep_ReplicatedMovement()
 void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-UE_LOG(LogTemp, Warning, TEXT("beginplay"));
+
+	//依旧需要在BeginPlay中调用这个，因为尽管在Controller中的OnPossess添加了SetHudHealth，
+	//但是在游戏开始和OnPossess时并不是所有东西都初始化好了，可能DCHud已经初始化而DCHud->CharacterOverlay还没有
 	UpdateHUDHealth();
 
 	if (HasAuthority())
@@ -473,7 +475,7 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 }
 
 void ABlasterCharacter::UpdateHUDHealth()
-{UE_LOG(LogTemp, Warning, TEXT("sethud"));
+{
 	if(DCPlayerController == nullptr) DCPlayerController = Cast<ADCPlayerController>(Controller);
 	if (DCPlayerController)
 	{

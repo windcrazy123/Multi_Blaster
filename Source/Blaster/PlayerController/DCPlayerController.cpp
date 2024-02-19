@@ -3,6 +3,7 @@
 
 #include "DCPlayerController.h"
 
+#include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/HUD/CharacterOverlay.h"
 #include "Blaster/HUD/DCHUD.h"
 #include "Components/ProgressBar.h"
@@ -14,6 +15,17 @@ void ADCPlayerController::BeginPlay()
 	Super::BeginPlay();
 
 	DCHud = Cast<ADCHUD>(GetHUD());
+}
+
+void ADCPlayerController::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
+
+	ABlasterCharacter* PlayerCharacter = Cast<ABlasterCharacter>(InPawn);
+	if (PlayerCharacter)
+	{
+		SetHudHealth(PlayerCharacter->GetCurHealth(), PlayerCharacter->GetMaxHealth());
+	}
 }
 
 void ADCPlayerController::SetHudHealth(float CurHealth, float MaxHealth)
