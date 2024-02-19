@@ -51,3 +51,14 @@ void ADCPlayerController::SetHudScore(float Score)
 		DCHud->CharacterOverlay->ScoreAmount->SetText(FText::FromString(ScoreText));
 	}
 }
+
+void ADCPlayerController::SetHUDDefeats(int32 Defeats)
+{
+	if(DCHud == nullptr) DCHud = Cast<ADCHUD>(GetHUD());
+
+	if(DCHud && DCHud->CharacterOverlay && DCHud->CharacterOverlay->DefeatsAmount)
+	{
+		FString DefeatsText = FString::Printf(TEXT("%d"), Defeats);
+		DCHud->CharacterOverlay->DefeatsAmount->SetText(FText::FromString(DefeatsText));
+	}
+}

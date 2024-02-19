@@ -5,6 +5,14 @@
 
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/PlayerController/DCPlayerController.h"
+#include "Net/UnrealNetwork.h"
+
+void ADCPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ADCPlayerState, Defeats);
+}
 
 void ADCPlayerState::AddToScore(float ScoreAmount)
 {
@@ -22,7 +30,6 @@ void ADCPlayerState::AddToScore(float ScoreAmount)
 		}
 	}
 }
-
 void ADCPlayerState::OnRep_Score()
 {
 	Super::OnRep_Score();
@@ -34,6 +41,33 @@ void ADCPlayerState::OnRep_Score()
 		if (Controller)
 		{
 			Controller->SetHudScore(GetScore());
+		}
+	}
+}
+
+void ADCPlayerState::AddToDefeats(int32 DefeatsAmount)
+{
+	Defeats += DefeatsAmount;
+
+	if(Character == nullptr) Character = Cast<ABlasterCharacter>(GetPawn());
+	if (Character)
+	{
+		Controller = Controller ? Controller : Cast<ADCPlayerController>(Character->Controller);
+		if (Controller)
+		{
+			Controller->SetHUDDefeats(Defeats);
+		}
+	}
+}
+void ADCPlayerState::OnRep_Defeats()
+{
+	if(Character == nullptr) Character = Cast<ABlasterCharacter>(GetPawn());
+	if (Character)
+	{
+		Controller = Controller ? Controller : Cast<ADCPlayerController>(Character->Controller);
+		if (Controller)
+		{
+			Controller->SetHUDDefeats(Defeats);
 		}
 	}
 }

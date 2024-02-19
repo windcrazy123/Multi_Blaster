@@ -18,6 +18,10 @@ void ADCGameMode::PlayerEliminated(ABlasterCharacter* ElimmedCharacter, ADCPlaye
 	{
 		AttackerPlayerState->AddToScore(1.f);
 	}
+	if (VictimPlayerState)
+	{
+		VictimPlayerState->AddToDefeats(1);
+	}
 	
 	if (ElimmedCharacter)
 	{

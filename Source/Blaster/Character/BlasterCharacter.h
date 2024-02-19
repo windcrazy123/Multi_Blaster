@@ -120,6 +120,7 @@ private:
 	UFUNCTION()
 	void OnRep_Health();
 
+	UPROPERTY()
 	class ADCPlayerController* DCPlayerController;
 
 	/*
@@ -161,7 +162,8 @@ private:
 	/*
 	 * Score
 	 */
-	class ADCPlayerState* PlayerState;
+	UPROPERTY()//一方面防止访问垃圾指针另一方面通知虚幻构建工具自动生成对象与虚幻垃圾收集系统正常工作所需的代码，指针都要进行管理
+	class ADCPlayerState* DCPlayerState;
 public:	
 	//FORCEINLINE void SetOverlappingWeapon(AWeapon* Weapon){ OverlappingWeapon = Weapon; }
 	void SetOverlappingWeapon(AWeapon* Weapon);

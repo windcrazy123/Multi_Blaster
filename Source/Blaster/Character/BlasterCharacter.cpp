@@ -143,12 +143,13 @@ void ABlasterCharacter::Tick(float DeltaTime)
 void ABlasterCharacter::PollInit()
 {
 	//不知道PlayerState什么时候能初始化，所以在tick中不断尝试进行初始化
-	if (PlayerState == nullptr)
+	if (DCPlayerState == nullptr)
 	{
-		PlayerState = GetPlayerState<ADCPlayerState>();
-		if (PlayerState)
+		DCPlayerState = GetPlayerState<ADCPlayerState>();
+		if (DCPlayerState)
 		{
-			PlayerState->AddToScore(0.f);
+			DCPlayerState->AddToScore(0.f);
+			DCPlayerState->AddToDefeats(0);
 		}
 	}
 }

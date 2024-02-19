@@ -21,9 +21,12 @@ public:
 
 	void SetHudScore(float Score);
 
+	void SetHUDDefeats(int32 Defeats);
+
 protected:
 	virtual void BeginPlay() override;
 
 private:
+	UPROPERTY()
 	class ADCHUD* DCHud;
 };

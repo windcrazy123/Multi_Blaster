@@ -14,6 +14,7 @@ class BLASTER_API ADCPlayerState : public APlayerState
 {
 	GENERATED_BODY()
 public:
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	/*
 	 * Score
 	 */
@@ -21,7 +22,11 @@ public:
 	void AddToScore(float ScoreAmount);
 	//rep client score
 	virtual void OnRep_Score() override;
-
+	// Defeats 类似Score
+	UFUNCTION()
+	virtual void OnRep_Defeats();
+	void AddToDefeats(int32 DefeatsAmount);
+	
 private:
 	//UPROPERTY() or TWeakObjectPtr防止由于访问GC悬空 Actor 指针而导致的崩溃
 	//TWeakObjectPtr<class ABlasterCharacter> Character;
@@ -33,4 +38,10 @@ private:
 	class ABlasterCharacter* Character;
 	UPROPERTY()
 	class ADCPlayerController* Controller;
+
+	// Defeats 类似Score
+	UPROPERTY(ReplicatedUsing = OnRep_Defeats)
+	int32 Defeats;
+
+	
 };
