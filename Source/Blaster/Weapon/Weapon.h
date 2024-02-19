@@ -73,6 +73,8 @@ public:
 	//Ammo
 	virtual void OnRep_Owner() override;
 	void SetHUDAmmo();
+
+	FORCEINLINE bool IsEmpty() const { return Ammo <= 0; }
 	
 protected:
 	virtual void BeginPlay() override;

@@ -199,9 +199,9 @@ void UCombatComponent::Fire()
 		//不论自动还是非自动
 		StartFireTimer();
 	}*/
-	if (bFireButtonPressed && EquippedWeapon)
-	{
-		if(bCanFire)
+	// if (bFireButtonPressed)
+	// {
+		if(CanFire())
 		{
 			bCanFire = false;
 			ServerFire(HitTarget);
@@ -210,7 +210,7 @@ void UCombatComponent::Fire()
 			//不论自动还是非自动
 			StartFireTimer();
 		}
-	}
+	//}
 }
 void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
@@ -341,3 +341,8 @@ void UCombatComponent::OnRep_EquippedWeapon()
 	}
 }
 
+bool UCombatComponent::CanFire()
+{
+	if(EquippedWeapon == nullptr) return false;
+	return !EquippedWeapon->IsEmpty() && bCanFire && bFireButtonPressed;
+}

@@ -108,4 +108,8 @@ private:
 	void StartFireTimer();
 	//计时器回调
 	void FireTimerFinished();
+
+	//检查EquippedWeapon和子弹和bCanFire和bFireButtonPressed
+	//子弹用完时禁止开火
+	bool CanFire();
 };
