@@ -121,7 +121,7 @@ private:
 	//计时器回调
 	void FireTimerFinished();
 
-	//检查EquippedWeapon和子弹和bCanFire和bFireButtonPressed
+	//检查EquippedWeapon和子弹和bCanFire和bFireButtonPressed和CombatState
 	//子弹用完时禁止开火
 	bool CanFire();
 

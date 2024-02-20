@@ -226,7 +226,7 @@ void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& Trac
 void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
 	if(EquippedWeapon == nullptr) return;
-	if (Character)
+	if (Character /*&& CombatState == ECombatState::ECS_Unoccupied*/)
 	{
 		Character->PlayFireMontage(bAiming);
 		EquippedWeapon->Fire(TraceHitTarget);
@@ -393,10 +393,10 @@ void UCombatComponent::FinishReloading()
 		CombatState = ECombatState::ECS_Unoccupied;
 		//UpdateAmmoValues();
 	}
-	// if (bFireButtonPressed)
-	// {
-	// 	Fire();
-	// }
+	if (bFireButtonPressed)
+	{
+		Fire();
+	}
 }
 void UCombatComponent::OnRep_CombatState()
 {
@@ -406,12 +406,12 @@ void UCombatComponent::OnRep_CombatState()
 		//if (Character && !Character->IsLocallyControlled())
 			HandleReload();
 		break;
-	// case ECombatState::ECS_Unoccupied:
-	// 	if (bFireButtonPressed)
-	// 	{
-	// 		Fire();
-	// 	}
-	// 	break;
+	case ECombatState::ECS_Unoccupied:
+		if (bFireButtonPressed)
+		{
+			Fire();
+		}
+		break;
 	// case ECombatState::ECS_ThrowingGrenade:
 	// 	if (Character && !Character->IsLocallyControlled())
 	// 	{
@@ -434,7 +434,7 @@ void UCombatComponent::OnRep_CombatState()
 bool UCombatComponent::CanFire()
 {
 	if(EquippedWeapon == nullptr) return false;
-	return !EquippedWeapon->IsEmpty() && bCanFire && bFireButtonPressed;
+	return !EquippedWeapon->IsEmpty() && bCanFire && bFireButtonPressed && CombatState == ECombatState::ECS_Unoccupied;
 }
 
 void UCombatComponent::OnRep_CarriedAmmo()
