@@ -80,6 +80,11 @@ public:
 	FORCEINLINE bool IsEmpty() const { return Ammo <= 0; }
 
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
+
+	FORCEINLINE int32 GetAmmo() const { return Ammo; }
+	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; }
+	//Reload, add ammo to mag
+	void AddAmmo(int32 AddNum);
 	
 protected:
 	virtual void BeginPlay() override;
@@ -135,13 +140,15 @@ private:
 	/*
 	 * Ammo
 	 */
+	//弹夹中子弹数
 	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
 	int32 Ammo;
 	
 	void SpendRound();
 	UFUNCTION()
 	void OnRep_Ammo();
-	
+
+	//弹夹最大容量
 	UPROPERTY(EditAnywhere)
 	int32 MagCapacity;
 

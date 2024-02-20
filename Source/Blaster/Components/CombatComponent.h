@@ -56,6 +56,9 @@ protected:
 	void ServerReload();
 
 	void HandleReload();
+
+	//返回从背包取出对应类型子弹装载到武器弹夹中的子弹数量
+	int32 ReloadAmmoAmount();
 private:
 	void Fire();
 
@@ -149,4 +152,7 @@ private:
 
 	UFUNCTION()
 	void OnRep_CombatState();
+
+	//update ammo and carried ammo number
+	void UpdateAmmoValues();
 };

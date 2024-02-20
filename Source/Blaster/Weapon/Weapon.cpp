@@ -226,3 +226,9 @@ void AWeapon::SetHUDAmmo()
 	}
 }
 
+void AWeapon::AddAmmo(int32 AddNum)
+{
+	Ammo = FMath::Clamp(Ammo + AddNum, 0, MagCapacity);
+	SetHUDAmmo();
+}
+
