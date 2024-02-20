@@ -7,6 +7,7 @@
 
 #include "Blaster/Types/TurningInPlace.h"
 #include "Blaster/Interfaces/CrosshairInteraction.h"
+#include "Blaster/Types/CombatState.h"
 #include "Components/TimelineComponent.h"
 
 #include "BlasterCharacter.generated.h"
@@ -69,7 +70,7 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly,meta = (AllowPrivateAccess = "true"), Category = Widget)
 	class UWidgetComponent* OverheadWidget;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly,meta = (AllowPrivateAccess = "true"))
 	class UCombatComponent* CombatComponent;
 	
 	//复制    works only when the variable is changed
@@ -213,4 +214,6 @@ public:
 	 * Reload
 	 */
 	void PlayReloadMontage();
+
+	ECombatState GetCombatState() const;
 };

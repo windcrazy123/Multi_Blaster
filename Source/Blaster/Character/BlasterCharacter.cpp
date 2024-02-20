@@ -659,5 +659,9 @@ void ABlasterCharacter::UpdateDissolveMaterial(float DissolveValue)
 	}
 }
  
-
+ECombatState ABlasterCharacter::GetCombatState() const
+{
+	if(CombatComponent == nullptr) return ECombatState::ECS_MAX;
+	return  CombatComponent->CombatState;
+}
 

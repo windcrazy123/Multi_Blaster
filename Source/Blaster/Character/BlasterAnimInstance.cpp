@@ -44,6 +44,8 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bRotateRootBone = BlasterCharacter->ShouldRotateRootBone();
 	//血量归零时淘汰
 	bElimmed = BlasterCharacter->IsElimmed();
+	// 是否使用IK  reloading combatstate
+	bUseFABRIK = BlasterCharacter->GetCombatState() != ECombatState::ECS_Reloading;
 
 	/*
 	 *equip move: Direction and Lean

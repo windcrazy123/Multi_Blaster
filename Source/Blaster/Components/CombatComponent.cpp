@@ -32,6 +32,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
 	DOREPLIFETIME(UCombatComponent, bAiming);
 	DOREPLIFETIME_CONDITION(UCombatComponent, CarriedAmmo, COND_OwnerOnly);
+	DOREPLIFETIME(UCombatComponent, CombatState);
 }
 
 void UCombatComponent::BeginPlay()
@@ -360,16 +361,74 @@ void UCombatComponent::OnRep_EquippedWeapon()
 
 void UCombatComponent::Reload()
 {
-	if (CarriedAmmo > 0)
+	if (CarriedAmmo > 0 && CombatState == ECombatState::ECS_Unoccupied && EquippedWeapon
+		/*&& !EquippedWeapon->IsFull() && !bLocallyReloading*/)
 	{
 		ServerReload();
+		//HandleReload();
+		//bLocallyReloading = true;
 	}
 }
 void UCombatComponent::ServerReload_Implementation()
 {
-	if(Character == nullptr) return;
+	if (Character == nullptr || EquippedWeapon == nullptr) return;
 
-	Character->PlayReloadMontage();
+	CombatState = ECombatState::ECS_Reloading;
+	//if (!Character->IsLocallyControlled())
+		HandleReload();
+}
+void UCombatComponent::HandleReload()
+{
+	if (Character)
+	{
+		Character->PlayReloadMontage();
+	}
+}
+void UCombatComponent::FinishReloading()
+{
+	if (Character == nullptr) return;
+	//bLocallyReloading = false;
+	if (Character->HasAuthority())
+	{
+		CombatState = ECombatState::ECS_Unoccupied;
+		//UpdateAmmoValues();
+	}
+	// if (bFireButtonPressed)
+	// {
+	// 	Fire();
+	// }
+}
+void UCombatComponent::OnRep_CombatState()
+{
+	switch (CombatState)
+	{
+	case ECombatState::ECS_Reloading:
+		//if (Character && !Character->IsLocallyControlled())
+			HandleReload();
+		break;
+	// case ECombatState::ECS_Unoccupied:
+	// 	if (bFireButtonPressed)
+	// 	{
+	// 		Fire();
+	// 	}
+	// 	break;
+	// case ECombatState::ECS_ThrowingGrenade:
+	// 	if (Character && !Character->IsLocallyControlled())
+	// 	{
+	// 		Character->PlayThrowGrenadeMontage();
+	// 		AttachActorToLeftHand(EquippedWeapon);
+	// 		ShowAttachedGrenade(true);
+	// 	}
+	// 	break;
+	// case ECombatState::ECS_SwappingWeapons:
+	// 	if (Character && !Character->IsLocallyControlled())
+	// 	{
+	// 		Character->PlaySwapMontage();
+	// 	}
+	// 	break;
+	default:
+		break;
+	}
 }
 
 bool UCombatComponent::CanFire()
