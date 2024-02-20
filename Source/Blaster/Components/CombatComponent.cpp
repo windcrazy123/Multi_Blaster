@@ -12,6 +12,7 @@
 #include "Blaster/PlayerController/DCPlayerController.h"
 //#include "Blaster/HUD/DCHUD.h"
 #include "Camera/CameraComponent.h"
+#include "Sound/SoundCue.h"
 
 //#include "DrawDebugHelpers.h"
 
@@ -309,6 +310,13 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	}
 	EquippedWeapon = WeaponToEquip;
 
+	//EquipSound
+	if (EquippedWeapon->EquipSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this,
+			EquippedWeapon->EquipSound, EquippedWeapon->GetActorLocation());
+	}
+	
 	/*网络和attachactor不一定
 	 * 设置武器状态和附着Actor会传播到客户端，但是不能保证是哪一个先到达客户端，为了避免这种假设，可以在OnRep_EquippedWeapon中AttachActor以直接在客户端调用
 	 * 但是，SetWeaponState中会处理武器模拟物理的状态，如果在模拟物理时，是没有办法捡起武器的
@@ -346,6 +354,13 @@ void UCombatComponent::OnRep_EquippedWeapon()
 {
 	if (EquippedWeapon && Character)
 	{
+		//EquipSound
+     	if (EquippedWeapon->EquipSound)
+     	{
+     		UGameplayStatics::PlaySoundAtLocation(this,
+     			EquippedWeapon->EquipSound, EquippedWeapon->GetActorLocation());
+     	}
+		
 		//网络和attachactor不一定，所以在这里复制了
 		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
 		const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));

@@ -31,6 +31,8 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	UPROPERTY(EditAnywhere)
+	class USoundCue* EquipSound;
 	
 	void ShowPickupWidget(bool bShowWidget);
     void SetWeaponState(EWeaponState State);
