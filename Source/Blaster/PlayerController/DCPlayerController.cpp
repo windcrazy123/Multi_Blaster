@@ -28,6 +28,30 @@ void ADCPlayerController::OnPossess(APawn* InPawn)
 	}
 }
 
+void ADCPlayerController::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	SetHUDTime();
+
+	PassedTime += DeltaSeconds;
+	if (PassedTime>DeltaTimeSyncFrequency && IsLocalController())
+	{
+		ServerRequestServerTime(GetWorld()->GetTimeSeconds());
+		PassedTime = 0.f;
+	}
+}
+
+void ADCPlayerController::ReceivedPlayer()
+{
+	Super::ReceivedPlayer();
+
+	if (IsLocalController())
+	{
+		ServerRequestServerTime(GetWorld()->GetTimeSeconds());
+	}
+}
+
 void ADCPlayerController::SetHudHealth(float CurHealth, float MaxHealth)
 {
 	if(DCHud == nullptr) DCHud = Cast<ADCHUD>(GetHUD());
@@ -83,4 +107,45 @@ void ADCPlayerController::SetHUDCarriedAmmo(int32 Ammo)
 		FString AmmoText = FString::Printf(TEXT("%d"), Ammo);
 		DCHud->CharacterOverlay->CarriedAmmoAmount->SetText(FText::FromString(AmmoText));
 	}
+}
+
+//tick call
+void ADCPlayerController::SetHUDTime()
+{
+	uint32 Second = FMath::CeilToInt(LevelTime - GetServerTime());
+	if (LelvelTimeInt != Second)
+	{
+		SetHUDLevelCountdownText(LevelTime - GetServerTime());
+		LelvelTimeInt = Second;
+	}
+}
+//one second call
+void ADCPlayerController::SetHUDLevelCountdownText(float CountdownTime)
+{
+	if(DCHud == nullptr) DCHud = Cast<ADCHUD>(GetHUD());
+
+	if(DCHud && DCHud->CharacterOverlay && DCHud->CharacterOverlay->LevelCountdownText)
+	{
+		int32 SumTime = FMath::FloorToInt(CountdownTime);
+		int32 Minutes = SumTime / 60;
+		int32 Seconds = SumTime % 60;
+		FString LevelCountdownText = FString::Printf(TEXT("%02d:%02d"), Minutes, Seconds);
+		DCHud->CharacterOverlay->LevelCountdownText->SetText(FText::FromString(LevelCountdownText));
+	}
+}
+void ADCPlayerController::ServerRequestServerTime_Implementation(float ClientTime)
+{
+	float ServerTime = GetWorld()->GetTimeSeconds();
+	ClientReceiveServerTime(ClientTime, ServerTime);
+}
+void ADCPlayerController::ClientReceiveServerTime_Implementation(float ClientTime, float ServerTime)
+{
+	float OneRPCTime = GetWorld()->GetTimeSeconds() - ClientTime;
+	float CurServerTime = ServerTime + OneRPCTime*0.5f;
+	DeltaTimeOfClientServer = CurServerTime - GetWorld()->GetTimeSeconds();
+}
+float ADCPlayerController::GetServerTime()
+{
+	if(HasAuthority()) return GetWorld()->GetTimeSeconds();
+	else return GetWorld()->GetTimeSeconds() + DeltaTimeOfClientServer;
 }
