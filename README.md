@@ -406,3 +406,88 @@ AActor* MyReferenceToAnotherActor; }
 ## 我如何决定手动销毁某些东西？
 
 从 AActor 类派生的对象（从 UObject 派生，因此可以成为 GC 系统的一部分）实现 Destroy 函数。当你摧毁一个演员时，它会在帧结束时将自己从世界中删除。这意味着它将继续存在（并且指针仍然有效）直到帧结束，此时当它被删除时它们将变为空。您经常会遇到需要知道指向对象的指针是否仍然有效以及该对象是否未被销毁的情况。您可以使用 `IsValid(...)` 函数来完成此操作，在该函数中传递一个指向对象的指针。如果指针为 `nullptr` 或者已对该对象调用 `Destroy()` 并且该对象尚未从世界中删除，则 `IsValid()` 将返回 false。
+
+# Match State
+> 参考：[Gameplay架构](https://zhuanlan.zhihu.com/p/23707588)
+
+**多人游戏的步调同步**，在多人游戏的时候，我们常常需要等所有加入的玩家连上之后，载入地图完毕后才能一起开始逻辑。因此UE提供了一个MatchState来指定一场游戏运行的状态，就是用了一个状态机来标记开始和结束的状态，并触发各种回调。因此大部分虚幻引擎游戏直接继承自GameModeBase尤其是单机游戏。`GameMode.h`
+
+```c++
+/** Possible state of the current match, where a match is all the gameplay that happens on a single map */
+namespace MatchState
+{
+	extern ENGINE_API const FName EnteringMap;			// We are entering this map, actors are not yet ticking
+	extern ENGINE_API const FName WaitingToStart;		// Actors are ticking, but the match has not yet started, 在这个状态下我们只能操控SpectatorPawn在关卡中飞来飞去，如下图1.
+	extern ENGINE_API const FName InProgress;			// Normal gameplay is occurring. Specific games will have their own state machine inside this state
+	extern ENGINE_API const FName WaitingPostMatch;		// Match has ended so we aren't accepting new players, but actors are still ticking
+	extern ENGINE_API const FName LeavingMap;			// We are transitioning out of the map to another location
+	extern ENGINE_API const FName Aborted;				// Match has failed due to network issues or other problems, cannot continue
+
+	// If a game needs to add additional states, you may need to override HasMatchStarted and HasMatchEnded to deal with the new states
+	// Do not add any states before WaitingToStart or after WaitingPostMatch
+}
+```
+
+![](.\ReadMeImg\WaitingToStart.png)
+[^图1]: MatchState：WaitingToStart
+
+
+## bDelayedStart
+
+我们可以在构造函数中设置`bDelayedStart`为true来手动控制游玩进程
+
+```c++
+AMyGameMode::AMyGameMode()
+{
+    //MatchState:WaitingToStart, we need call StartMatch() manually to transition from WaitingToStart to InProgress
+    bDelayedStart = true;
+}
+```
+
+```c++
+/** Whether the game should immediately start when the first player logs in. Affects the default behavior of ReadyToStartMatch 当第一个玩家登录时游戏是否应立即开始。影响 ReadyToStartMatch() 的默认行为*/
+UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="GameMode")
+uint32 bDelayedStart : 1;
+```
+
+```c++
+//Returns true if ready to Start Match.
+bool AGameMode::ReadyToStartMatch_Implementation()
+{
+    // If bDelayed Start is set, wait for a manual match start
+    if (bDelayedStart)
+    {
+       return false;
+    }
+
+    // By default start when we have > 0 players
+    if (GetMatchState() == MatchState::WaitingToStart)
+    {
+       if (NumPlayers + NumBots > 0)
+       {
+          return true;
+       }
+    }
+    return false;
+}
+```
+
+```c++
+/** Transition from WaitingToStart to InProgress. You can call this manually, will also get called if ReadyToStartMatch returns true */
+void AGameMode::StartMatch()
+{
+    if (HasMatchStarted())
+    {
+       // Already started
+       return;
+    }
+
+    //Let the game session override the StartMatch function, in case it wants to wait for arbitration
+    if (GameSession->HandleStartMatchRequest())
+    {
+       return;
+    }
+
+    SetMatchState(MatchState::InProgress);
+}
+```

@@ -9,6 +9,46 @@
 #include "GameFramework/PlayerStart.h"
 #include "Kismet/GameplayStatics.h"
 
+ADCGameMode::ADCGameMode()
+{
+	/*
+	 * Match State
+	 */
+	
+	//MatchState:WaitingToStart, we need call StartMatch manually to transition from WaitingToStart to InProgress
+	bDelayedStart = true;
+	
+}
+
+void ADCGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+
+	/*
+	 * Match State
+	 */
+	LevelStartingTime = GetWorld()->GetTimeSeconds();
+}
+
+void ADCGameMode::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	/*
+	 * Match State
+	 */
+
+	//之后换成Timer
+	if (MatchState == MatchState::WaitingToStart)
+	{
+		CountdownTime = WarmupTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+		if (CountdownTime <= 0.f)
+		{
+			StartMatch();
+		}
+	}
+}
+
 void ADCGameMode::PlayerEliminated(ABlasterCharacter* ElimmedCharacter, ADCPlayerController* VictimController,
                                    ADCPlayerController* AttackerController)
 {
@@ -45,3 +85,4 @@ void ADCGameMode::RequestRespawn(ACharacter* ElimmedCharacter, AController* Elim
 		RestartPlayerAtPlayerStart(ElimmedController, PlayerStarts[RandIndex]);
 	}
 }
+
