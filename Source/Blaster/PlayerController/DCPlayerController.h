@@ -18,6 +18,7 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 	//Update DeltaTimeOfClientServer as soon as possible
 	virtual void ReceivedPlayer() override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	
 	void SetHudHealth(float CurHealth, float MaxHealth);
@@ -29,6 +30,12 @@ public:
 
 	virtual float GetServerTime();
 
+	/*
+	 * MatchState
+	 */
+
+	void OnMatchStateSet(FName MatchState);
+	
 protected:
 	virtual void BeginPlay() override;
 
@@ -51,10 +58,34 @@ protected:
 	UPROPERTY(EditAnywhere, Category = DeltaTime)
 	float DeltaTimeSyncFrequency = 5.f;
 	float PassedTime = 0.f;
+
+	/*
+	 * MatchState poll init
+	 */
+	//void PollInit();
 private:
 	UPROPERTY()
 	class ADCHUD* DCHud;
 
 	float LevelTime = 80.f;
 	uint32 LelvelTimeInt = 0;
+
+	/*
+	 * MatchState
+	 */
+
+	UPROPERTY(ReplicatedUsing = OnRep_MatchState)
+	FName MatchState;
+	UFUNCTION()
+	void OnRep_MatchState();
+
+	// poll init
+	/*UPROPERTY()
+	class UCharacterOverlay* CharacterOverlay;
+
+	bool bInitCharacterOverlay = false;
+	float HUDHealth;
+	float HUDMaxHealth;
+	float HUDScore;
+	int32 HUDDefeats;*/
 };

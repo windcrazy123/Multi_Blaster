@@ -8,6 +8,8 @@
 #include "Blaster/HUD/DCHUD.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
+#include "GameFramework/GameMode.h"
+#include "Net/UnrealNetwork.h"
 
 
 void ADCPlayerController::BeginPlay()
@@ -40,6 +42,11 @@ void ADCPlayerController::Tick(float DeltaSeconds)
 		ServerRequestServerTime(GetWorld()->GetTimeSeconds());
 		PassedTime = 0.f;
 	}
+
+	/*
+	 * MatchState
+	 */
+	//PollInit();
 }
 
 void ADCPlayerController::ReceivedPlayer()
@@ -50,6 +57,13 @@ void ADCPlayerController::ReceivedPlayer()
 	{
 		ServerRequestServerTime(GetWorld()->GetTimeSeconds());
 	}
+}
+
+void ADCPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ADCPlayerController, MatchState);
 }
 
 void ADCPlayerController::SetHudHealth(float CurHealth, float MaxHealth)
@@ -63,6 +77,15 @@ void ADCPlayerController::SetHudHealth(float CurHealth, float MaxHealth)
 		FString HealthText = FString::Printf(TEXT("%d/%d"), FMath::CeilToInt(CurHealth), FMath::CeilToInt(MaxHealth));
 		DCHud->CharacterOverlay->HealthText->SetText(FText::FromString(HealthText));
 	}
+	/*
+	 * MatchState pollinit
+	 */
+	// else
+	// {
+	// 	bInitCharacterOverlay = true;
+	// 	HUDHealth = CurHealth;
+	// 	HUDMaxHealth = MaxHealth;
+	// }
 }
 
 void ADCPlayerController::SetHudScore(float Score)
@@ -74,6 +97,14 @@ void ADCPlayerController::SetHudScore(float Score)
 		FString ScoreText = FString::Printf(TEXT("%d"), FMath::FloorToInt(Score));
 		DCHud->CharacterOverlay->ScoreAmount->SetText(FText::FromString(ScoreText));
 	}
+	/*
+	 * MatchState pollinit
+	 */
+	// else
+	// {
+	// 	bInitCharacterOverlay = true;
+	// 	HUDScore = Score;
+	// }
 }
 
 void ADCPlayerController::SetHUDDefeats(int32 Defeats)
@@ -85,6 +116,14 @@ void ADCPlayerController::SetHUDDefeats(int32 Defeats)
 		FString DefeatsText = FString::Printf(TEXT("%d"), Defeats);
 		DCHud->CharacterOverlay->DefeatsAmount->SetText(FText::FromString(DefeatsText));
 	}
+	/*
+	 * MatchState pollinit
+	 */
+	// else
+	// {
+	// 	bInitCharacterOverlay = true;
+	// 	HUDDefeats = Defeats;
+	// }
 }
 
 void ADCPlayerController::SetHUDWeaponAmmo(int32 Ammo)
@@ -149,3 +188,46 @@ float ADCPlayerController::GetServerTime()
 	if(HasAuthority()) return GetWorld()->GetTimeSeconds();
 	else return GetWorld()->GetTimeSeconds() + DeltaTimeOfClientServer;
 }
+
+//server
+void ADCPlayerController::OnMatchStateSet(FName StateOfMatch)
+{
+	MatchState = StateOfMatch;
+
+	if (MatchState == MatchState::InProgress)
+	{
+		if(DCHud == nullptr) DCHud = Cast<ADCHUD>(GetHUD());
+		if (DCHud)
+		{
+			DCHud->AddCharacterOverlay();
+		}
+	}
+}
+void ADCPlayerController::OnRep_MatchState()
+{
+	if (MatchState == MatchState::InProgress)
+	{
+		if(DCHud == nullptr) DCHud = Cast<ADCHUD>(GetHUD());
+		if (DCHud)
+		{
+			DCHud->AddCharacterOverlay();
+		}
+	}
+}
+// poll init
+/*void ADCPlayerController::PollInit()
+{
+	if (CharacterOverlay == nullptr)
+	{
+		if (DCHud && DCHud->CharacterOverlay)
+		{
+			CharacterOverlay = DCHud->CharacterOverlay;
+			if (CharacterOverlay)
+			{
+				SetHudHealth(HUDHealth, HUDMaxHealth);
+				SetHudScore(HUDScore);
+				SetHUDDefeats(HUDDefeats);
+			}
+		}
+	}
+}*/

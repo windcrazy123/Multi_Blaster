@@ -49,6 +49,20 @@ void ADCGameMode::Tick(float DeltaSeconds)
 	}
 }
 
+void ADCGameMode::OnMatchStateSet()
+{
+	Super::OnMatchStateSet();
+
+	for(FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		ADCPlayerController* DCPlayerController = Cast<ADCPlayerController>(*It);
+		if (DCPlayerController)
+		{
+			DCPlayerController->OnMatchStateSet(MatchState);
+		}
+	}
+}
+
 void ADCGameMode::PlayerEliminated(ABlasterCharacter* ElimmedCharacter, ADCPlayerController* VictimController,
                                    ADCPlayerController* AttackerController)
 {

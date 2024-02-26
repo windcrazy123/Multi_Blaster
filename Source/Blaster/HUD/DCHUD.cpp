@@ -10,7 +10,8 @@ void ADCHUD::BeginPlay()
 {
 	Super::BeginPlay();
 
-	AddCharacterOverlay();
+	//转移到StartMatch()后 gamemode
+	//AddCharacterOverlay();
 }
 
 void ADCHUD::AddCharacterOverlay()
