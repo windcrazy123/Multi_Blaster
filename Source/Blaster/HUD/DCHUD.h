@@ -40,6 +40,18 @@ public:
 	class UCharacterOverlay* CharacterOverlay;
 
 	void AddCharacterOverlay();
+
+	/*
+	 * Warm Up
+	 */
+
+	UPROPERTY(EditAnywhere, Category = "Warm Up")
+	TSubclassOf<UUserWidget> WarmUpWidgetClass;
+
+	UPROPERTY()
+	class UWarmUpWidget* WarmUpWidget;
+
+	void AddWarmUpWidget();
 	
 protected:
 	virtual void BeginPlay() override;

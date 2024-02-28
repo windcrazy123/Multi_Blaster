@@ -4,7 +4,9 @@
 #include "DCHUD.h"
 
 #include "CharacterOverlay.h"
+#include "WarmUpWidget.h"
 #include "Blueprint/UserWidget.h"
+
 
 void ADCHUD::BeginPlay()
 {
@@ -21,6 +23,16 @@ void ADCHUD::AddCharacterOverlay()
 	{
 		CharacterOverlay = CreateWidget<UCharacterOverlay>(PlayerController, CharacterOverlayClass);
 		CharacterOverlay->AddToViewport();
+	}
+}
+
+void ADCHUD::AddWarmUpWidget()
+{
+	APlayerController* PlayerController = GetOwningPlayerController();
+	if (PlayerController && WarmUpWidgetClass)
+	{
+		WarmUpWidget = CreateWidget<UWarmUpWidget>(PlayerController, WarmUpWidgetClass);
+		WarmUpWidget->AddToViewport();
 	}
 }
 

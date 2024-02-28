@@ -20,6 +20,11 @@ public:
 	/*
 	 * Match State
 	 */
+
+	//关卡游戏时间
+	UPROPERTY(EditDefaultsOnly)
+	float LevelTime = 80.f;
+	
 	UPROPERTY(EditDefaultsOnly)
 	float WarmupTime = 10.f;
 

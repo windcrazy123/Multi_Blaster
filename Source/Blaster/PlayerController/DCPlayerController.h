@@ -27,6 +27,7 @@ public:
 	void SetHUDWeaponAmmo(int32 Ammo);
 	void SetHUDCarriedAmmo(int32 Ammo);
 	void SetHUDLevelCountdownText(float CountdownTime);
+	void SetHUDWarmUpTimeCountdown(float CountdownTime);
 
 	virtual float GetServerTime();
 
@@ -63,12 +64,25 @@ protected:
 	 * MatchState poll init
 	 */
 	//void PollInit();
+
+	//warm up
+	UFUNCTION(Server, Reliable)
+	void ServerCheckMatchState();
+
+	UFUNCTION(Client, Reliable)
+	void ClientJoinGoingGame(float TimeOfWarmUp, float TimeOfLevel, float TimeOfLevelStarting, FName StateOfMatch);
+	
 private:
 	UPROPERTY()
 	class ADCHUD* DCHud;
 
-	float LevelTime = 80.f;
+	//init with game mode
+	float LevelTime = 0.f;
 	uint32 LelvelTimeInt = 0;
+	float LevelStartingTime = 0.f;
+
+	//warm up, init with game mode
+	float WarmUpTime = 0.f;
 
 	/*
 	 * MatchState

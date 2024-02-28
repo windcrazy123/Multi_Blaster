@@ -4,11 +4,14 @@
 #include "DCPlayerController.h"
 
 #include "Blaster/Character/BlasterCharacter.h"
+#include "Blaster/GameMode/DCGameMode.h"
 #include "Blaster/HUD/CharacterOverlay.h"
 #include "Blaster/HUD/DCHUD.h"
+#include "Blaster/HUD/WarmUpWidget.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "GameFramework/GameMode.h"
+#include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 
 
@@ -16,7 +19,14 @@ void ADCPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
+	ServerCheckMatchState();
+
 	DCHud = Cast<ADCHUD>(GetHUD());
+
+	if (DCHud)
+	{
+		DCHud->AddWarmUpWidget();
+	}
 }
 
 void ADCPlayerController::OnPossess(APawn* InPawn)
@@ -151,10 +161,26 @@ void ADCPlayerController::SetHUDCarriedAmmo(int32 Ammo)
 //tick call
 void ADCPlayerController::SetHUDTime()
 {
-	uint32 Second = FMath::CeilToInt(LevelTime - GetServerTime());
+	float LeftTime = 0.f;
+	if (MatchState == MatchState::WaitingToStart)
+	{
+		LeftTime = WarmUpTime - GetServerTime() + LevelStartingTime;
+	}else if(MatchState == MatchState::InProgress)
+	{
+		LeftTime = WarmUpTime+LevelTime - GetServerTime() + LevelStartingTime;
+	}
+	
+	uint32 Second = FMath::CeilToInt(LeftTime);
 	if (LelvelTimeInt != Second)
 	{
-		SetHUDLevelCountdownText(LevelTime - GetServerTime());
+		if (MatchState == MatchState::WaitingToStart)
+		{
+			SetHUDWarmUpTimeCountdown(LeftTime);
+		}else if(MatchState == MatchState::InProgress)
+		{
+			SetHUDLevelCountdownText(LeftTime);
+		}
+		
 		LelvelTimeInt = Second;
 	}
 }
@@ -172,6 +198,22 @@ void ADCPlayerController::SetHUDLevelCountdownText(float CountdownTime)
 		DCHud->CharacterOverlay->LevelCountdownText->SetText(FText::FromString(LevelCountdownText));
 	}
 }
+
+void ADCPlayerController::SetHUDWarmUpTimeCountdown(float CountdownTime)
+{
+	if(DCHud == nullptr) DCHud = Cast<ADCHUD>(GetHUD());
+
+	if(DCHud && DCHud->WarmUpWidget && DCHud->WarmUpWidget->WarmUpTime)
+	{
+		int32 SumTime = FMath::FloorToInt(CountdownTime);
+		int32 Minutes = SumTime / 60;
+		int32 Seconds = SumTime % 60;
+		FString LevelCountdownText = FString::Printf(TEXT("%02d:%02d"), Minutes, Seconds);
+		DCHud->WarmUpWidget->WarmUpTime->SetText(FText::FromString(LevelCountdownText));
+	}
+}
+
+//called in ReceivedPlayer and per DeltaTimeSyncFrequency one called
 void ADCPlayerController::ServerRequestServerTime_Implementation(float ClientTime)
 {
 	float ServerTime = GetWorld()->GetTimeSeconds();
@@ -200,6 +242,12 @@ void ADCPlayerController::OnMatchStateSet(FName StateOfMatch)
 		if (DCHud)
 		{
 			DCHud->AddCharacterOverlay();
+
+			//warm up
+			if (DCHud->WarmUpWidget)
+			{
+				DCHud->WarmUpWidget->SetVisibility(ESlateVisibility::Hidden);
+			}
 		}
 	}
 }
@@ -211,9 +259,16 @@ void ADCPlayerController::OnRep_MatchState()
 		if (DCHud)
 		{
 			DCHud->AddCharacterOverlay();
+			
+			//warm up
+			if (DCHud->WarmUpWidget)
+			{
+				DCHud->WarmUpWidget->SetVisibility(ESlateVisibility::Hidden);
+			}
 		}
 	}
 }
+
 // poll init
 /*void ADCPlayerController::PollInit()
 {
@@ -231,3 +286,29 @@ void ADCPlayerController::OnRep_MatchState()
 		}
 	}
 }*/
+
+void ADCPlayerController::ServerCheckMatchState_Implementation()
+{
+	ADCGameMode* GameMode = Cast<ADCGameMode>(UGameplayStatics::GetGameMode(this));
+	if (GameMode)
+	{
+		WarmUpTime = GameMode->WarmupTime;
+		LevelTime = GameMode->LevelTime;
+		LevelStartingTime = GameMode->LevelStartingTime;
+		MatchState = GameMode->GetMatchState();
+
+		ClientJoinGoingGame(WarmUpTime, LevelTime, LevelStartingTime, MatchState);
+	}
+}
+
+void ADCPlayerController::ClientJoinGoingGame_Implementation(float TimeOfWarmUp, float TimeOfLevel,
+	float TimeOfLevelStarting, FName StateOfMatch)
+{
+	WarmUpTime = TimeOfWarmUp;
+	LevelTime = TimeOfLevel;
+	LevelStartingTime = TimeOfLevelStarting;
+	MatchState = StateOfMatch;
+
+	OnMatchStateSet(MatchState);
+}
+
