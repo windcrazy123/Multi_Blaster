@@ -269,6 +269,7 @@ void ADCPlayerController::OnMatchStateSet(FName StateOfMatch)
 
 	if (MatchState == MatchState::InProgress)
 	{
+		//delayed start = false 这个会被调用两次
 		HandleMatchHasStarted();
 	}
 	else if(MatchState == MatchState::Cooldown)
@@ -292,7 +293,8 @@ void ADCPlayerController::HandleMatchHasStarted()
 	if(DCHud == nullptr) DCHud = Cast<ADCHUD>(GetHUD());
 	if (DCHud)
 	{
-		DCHud->AddCharacterOverlay();
+		//delayed start = false 这个会被调用两次,因此检查一下
+		if(DCHud->CharacterOverlay == nullptr) DCHud->AddCharacterOverlay();
 
 		//warm up
 		if (DCHud->WarmUpWidget)

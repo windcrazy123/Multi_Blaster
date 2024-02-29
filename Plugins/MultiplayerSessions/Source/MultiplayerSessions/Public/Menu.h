@@ -57,4 +57,10 @@ private:
 	int32 NumPublicConnections{4};
 	FString MatchType{TEXT("FreeForAll")};
 	FString PathToLobby{TEXT("")};
+
+	
+	// UPROPERTY(meta = (BindWidget))
+	// UButton* PlayButton;
+	// UFUNCTION()
+	// void PlayButtonClicked();
 };
