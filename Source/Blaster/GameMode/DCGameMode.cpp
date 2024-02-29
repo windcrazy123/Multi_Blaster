@@ -60,6 +60,10 @@ void ADCGameMode::Tick(float DeltaSeconds)
 			SetMatchState(MatchState::Cooldown);
 		}
 	}
+	else if (MatchState == MatchState::Cooldown)
+	{
+		CountdownTime = CooldownTime+WarmupTime+LevelTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+	}
 }
 
 void ADCGameMode::OnMatchStateSet()

@@ -209,7 +209,7 @@ void ADCPlayerController::SetHUDLevelCountdownText(float CountdownTime)
 
 	if(DCHud && DCHud->CharacterOverlay && DCHud->CharacterOverlay->LevelCountdownText)
 	{
-		if (CountdownTime)
+		if (CountdownTime < 0.f)
 		{
 			DCHud->CharacterOverlay->LevelCountdownText->SetText(FText());
 			return;
@@ -228,7 +228,7 @@ void ADCPlayerController::SetHUDWarmUpTimeCountdown(float CountdownTime)
 
 	if(DCHud && DCHud->WarmUpWidget && DCHud->WarmUpWidget->WarmUpTime)
 	{
-		if (CountdownTime)
+		if (CountdownTime < 0.f)
 		{
 			DCHud->WarmUpWidget->WarmUpTime->SetText(FText());
 			return;
