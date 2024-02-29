@@ -61,6 +61,10 @@ bool UMenu::Initialize()
 	{
 		JoinButton->OnClicked.AddDynamic(this, &UMenu::JoinButtonClicked);
 	}
+	if (PlayButton)
+	{
+		PlayButton->OnClicked.AddDynamic(this, &UMenu::PlayButtonClicked);
+	}
 	return true;
 }
 
@@ -180,5 +184,14 @@ void UMenu::MenuTearDown()
 			PlayerController->SetInputMode(InputModeGameOnly);
 			PlayerController->SetShowMouseCursor(false);
 		}
+	}
+}
+
+void UMenu::PlayButtonClicked()
+{
+	UWorld* World = GetWorld();
+	if (World)
+	{
+		World->ServerTravel(FString("/Game/Maps/BlasterMap"));
 	}
 }

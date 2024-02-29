@@ -59,8 +59,8 @@ private:
 	FString PathToLobby{TEXT("")};
 
 	
-	// UPROPERTY(meta = (BindWidget))
-	// UButton* PlayButton;
-	// UFUNCTION()
-	// void PlayButtonClicked();
+	UPROPERTY(meta = (BindWidget))
+	UButton* PlayButton;
+	UFUNCTION()
+	void PlayButtonClicked();
 };
