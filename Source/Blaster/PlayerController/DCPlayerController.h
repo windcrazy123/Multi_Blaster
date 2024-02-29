@@ -70,7 +70,7 @@ protected:
 	void ServerCheckMatchState();
 
 	UFUNCTION(Client, Reliable)
-	void ClientJoinGoingGame(float TimeOfWarmUp, float TimeOfLevel, float TimeOfLevelStarting, FName StateOfMatch);
+	void ClientJoinGoingGame(float TimeOfWarmUp, float TimeOfLevel, float TimeOfLevelStarting, FName StateOfMatch, float TimeOfCooldown);
 	
 private:
 	UPROPERTY()
@@ -84,6 +84,9 @@ private:
 	//warm up, init with game mode
 	float WarmUpTime = 0.f;
 
+	//cool down
+	float CooldownTime = 0.f;
+
 	/*
 	 * MatchState
 	 */
@@ -92,6 +95,9 @@ private:
 	FName MatchState;
 	UFUNCTION()
 	void OnRep_MatchState();
+
+	void HandleMatchHasStarted();
+	void HandleMatchCooldown();
 
 	// poll init
 	/*UPROPERTY()
@@ -102,4 +108,8 @@ private:
 	float HUDMaxHealth;
 	float HUDScore;
 	int32 HUDDefeats;*/
+
+	//如果是主机直接取gamemode中的CountdownTime减少offset，但是已经有GetServerTime可以考虑注销这几行
+	UPROPERTY()
+	class ADCGameMode* DCGameMode;
 };

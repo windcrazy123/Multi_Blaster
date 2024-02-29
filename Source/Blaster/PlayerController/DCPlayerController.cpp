@@ -168,12 +168,30 @@ void ADCPlayerController::SetHUDTime()
 	}else if(MatchState == MatchState::InProgress)
 	{
 		LeftTime = WarmUpTime+LevelTime - GetServerTime() + LevelStartingTime;
+	}else if (MatchState == MatchState::Cooldown)
+	{
+		LeftTime = CooldownTime+WarmUpTime+LevelTime - GetServerTime() + LevelStartingTime;
 	}
 	
-	uint32 Second = FMath::CeilToInt(LeftTime);
+	uint32 Second = 0;
+
+	//如果是主机直接取gamemode中的CountdownTime减少offset，但是已经有GetServerTime可以考虑注销这几行
+	if (HasAuthority())
+	{
+		if(DCGameMode == nullptr) DCGameMode = Cast<ADCGameMode>(UGameplayStatics::GetGameMode(this));
+		if (DCGameMode)
+		{
+			Second = FMath::CeilToInt(DCGameMode->GetCountdownTime() + LevelStartingTime);
+		}
+	}
+	else
+	{
+		Second = FMath::CeilToInt(LeftTime);
+	}
+	
 	if (LelvelTimeInt != Second)
 	{
-		if (MatchState == MatchState::WaitingToStart)
+		if (MatchState == MatchState::WaitingToStart || MatchState == MatchState::Cooldown)
 		{
 			SetHUDWarmUpTimeCountdown(LeftTime);
 		}else if(MatchState == MatchState::InProgress)
@@ -191,6 +209,12 @@ void ADCPlayerController::SetHUDLevelCountdownText(float CountdownTime)
 
 	if(DCHud && DCHud->CharacterOverlay && DCHud->CharacterOverlay->LevelCountdownText)
 	{
+		if (CountdownTime)
+		{
+			DCHud->CharacterOverlay->LevelCountdownText->SetText(FText());
+			return;
+		}
+		
 		int32 SumTime = FMath::FloorToInt(CountdownTime);
 		int32 Minutes = SumTime / 60;
 		int32 Seconds = SumTime % 60;
@@ -198,13 +222,18 @@ void ADCPlayerController::SetHUDLevelCountdownText(float CountdownTime)
 		DCHud->CharacterOverlay->LevelCountdownText->SetText(FText::FromString(LevelCountdownText));
 	}
 }
-
 void ADCPlayerController::SetHUDWarmUpTimeCountdown(float CountdownTime)
 {
 	if(DCHud == nullptr) DCHud = Cast<ADCHUD>(GetHUD());
 
 	if(DCHud && DCHud->WarmUpWidget && DCHud->WarmUpWidget->WarmUpTime)
 	{
+		if (CountdownTime)
+		{
+			DCHud->WarmUpWidget->WarmUpTime->SetText(FText());
+			return;
+		}
+		
 		int32 SumTime = FMath::FloorToInt(CountdownTime);
 		int32 Minutes = SumTime / 60;
 		int32 Seconds = SumTime % 60;
@@ -231,40 +260,62 @@ float ADCPlayerController::GetServerTime()
 	else return GetWorld()->GetTimeSeconds() + DeltaTimeOfClientServer;
 }
 
-//server
+//server, 仿照GameMode但是处理HUD
 void ADCPlayerController::OnMatchStateSet(FName StateOfMatch)
 {
 	MatchState = StateOfMatch;
 
 	if (MatchState == MatchState::InProgress)
 	{
-		if(DCHud == nullptr) DCHud = Cast<ADCHUD>(GetHUD());
-		if (DCHud)
-		{
-			DCHud->AddCharacterOverlay();
-
-			//warm up
-			if (DCHud->WarmUpWidget)
-			{
-				DCHud->WarmUpWidget->SetVisibility(ESlateVisibility::Hidden);
-			}
-		}
+		HandleMatchHasStarted();
+	}
+	else if(MatchState == MatchState::Cooldown)
+	{
+		HandleMatchCooldown();
 	}
 }
 void ADCPlayerController::OnRep_MatchState()
 {
 	if (MatchState == MatchState::InProgress)
 	{
-		if(DCHud == nullptr) DCHud = Cast<ADCHUD>(GetHUD());
-		if (DCHud)
+		HandleMatchHasStarted();
+	}
+	else if(MatchState == MatchState::Cooldown)
+	{
+		HandleMatchCooldown();
+	}
+}
+void ADCPlayerController::HandleMatchHasStarted()
+{
+	if(DCHud == nullptr) DCHud = Cast<ADCHUD>(GetHUD());
+	if (DCHud)
+	{
+		DCHud->AddCharacterOverlay();
+
+		//warm up
+		if (DCHud->WarmUpWidget)
 		{
-			DCHud->AddCharacterOverlay();
-			
-			//warm up
-			if (DCHud->WarmUpWidget)
-			{
-				DCHud->WarmUpWidget->SetVisibility(ESlateVisibility::Hidden);
-			}
+			DCHud->WarmUpWidget->SetVisibility(ESlateVisibility::Hidden);
+		}
+	}
+}
+void ADCPlayerController::HandleMatchCooldown()
+{
+	if(DCHud == nullptr) DCHud = Cast<ADCHUD>(GetHUD());
+	if (DCHud)
+	{
+		if (DCHud->CharacterOverlay)
+		{
+			DCHud->CharacterOverlay->RemoveFromParent();
+		}
+
+		//cool down
+		if (DCHud->WarmUpWidget && DCHud->WarmUpWidget->TitleText && DCHud->WarmUpWidget->Info)
+		{
+			DCHud->WarmUpWidget->SetVisibility(ESlateVisibility::Visible);
+			FString TitleText("Settlement/Cooldown");
+			DCHud->WarmUpWidget->TitleText->SetText(FText::FromString(TitleText));
+			DCHud->WarmUpWidget->Info->SetText(FText::FromString("xxx斩杀多少怪物当前等级xx"));
 		}
 	}
 }
@@ -296,18 +347,19 @@ void ADCPlayerController::ServerCheckMatchState_Implementation()
 		LevelTime = GameMode->LevelTime;
 		LevelStartingTime = GameMode->LevelStartingTime;
 		MatchState = GameMode->GetMatchState();
+		CooldownTime = GameMode->CooldownTime;
 
-		ClientJoinGoingGame(WarmUpTime, LevelTime, LevelStartingTime, MatchState);
+		ClientJoinGoingGame(WarmUpTime, LevelTime, LevelStartingTime, MatchState, CooldownTime);
 	}
 }
-
 void ADCPlayerController::ClientJoinGoingGame_Implementation(float TimeOfWarmUp, float TimeOfLevel,
-	float TimeOfLevelStarting, FName StateOfMatch)
+	float TimeOfLevelStarting, FName StateOfMatch, float TimeOfCooldown)
 {
 	WarmUpTime = TimeOfWarmUp;
 	LevelTime = TimeOfLevel;
 	LevelStartingTime = TimeOfLevelStarting;
 	MatchState = StateOfMatch;
+	CooldownTime = TimeOfCooldown;
 
 	OnMatchStateSet(MatchState);
 }
