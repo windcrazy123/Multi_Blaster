@@ -604,6 +604,9 @@ void ABlasterCharacter::DisableInputMore(bool bRestartGame)
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
+	//stop fire
+	CombatComponent->SetFireButtonPressed(false);
+	
 	//Restart Game
 	if (bRestartGame)
 	{
@@ -613,8 +616,7 @@ void ABlasterCharacter::DisableInputMore(bool bRestartGame)
 		
 		if (CombatComponent)
 		{
-			//stop fire
-			CombatComponent->SetFireButtonPressed(false);
+			
 			//Destroy weapon and stop equipment animation
 			if(CombatComponent->EquippedWeapon)
 			{

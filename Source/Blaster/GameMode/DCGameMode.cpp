@@ -4,6 +4,7 @@
 #include "DCGameMode.h"
 
 #include "Blaster/Character/BlasterCharacter.h"
+#include "Blaster/GameState/DCGameState.h"
 #include "Blaster/PlayerController/DCPlayerController.h"
 #include "Blaster/PlayerState/DCPlayerState.h"
 #include "GameFramework/PlayerStart.h"
@@ -91,9 +92,15 @@ void ADCGameMode::PlayerEliminated(ABlasterCharacter* ElimmedCharacter, ADCPlaye
 {
 	ADCPlayerState* AttackerPlayerState = AttackerController ? Cast<ADCPlayerState>(AttackerController->PlayerState) : nullptr;
 	ADCPlayerState* VictimPlayerState = VictimController ? Cast<ADCPlayerState>(VictimController->PlayerState) : nullptr;
-	if (AttackerPlayerState && AttackerPlayerState != VictimPlayerState)
+
+	//gamestate update top score
+	ADCGameState* DCGameState = GetGameState<ADCGameState>();
+	
+	if (AttackerPlayerState && AttackerPlayerState != VictimPlayerState && DCGameState)
 	{
 		AttackerPlayerState->AddToScore(1.f);
+
+		DCGameState->UpdateTopScore(AttackerPlayerState);
 	}
 	if (VictimPlayerState)
 	{

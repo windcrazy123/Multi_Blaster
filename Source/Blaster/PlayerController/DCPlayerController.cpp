@@ -5,9 +5,11 @@
 
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/GameMode/DCGameMode.h"
+#include "Blaster/GameState/DCGameState.h"
 #include "Blaster/HUD/CharacterOverlay.h"
 #include "Blaster/HUD/DCHUD.h"
 #include "Blaster/HUD/WarmUpWidget.h"
+#include "Blaster/PlayerState/DCPlayerState.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "GameFramework/GameMode.h"
@@ -315,7 +317,35 @@ void ADCPlayerController::HandleMatchCooldown()
 			DCHud->WarmUpWidget->SetVisibility(ESlateVisibility::Visible);
 			FString TitleText("Settlement/Cooldown");
 			DCHud->WarmUpWidget->TitleText->SetText(FText::FromString(TitleText));
-			DCHud->WarmUpWidget->Info->SetText(FText::FromString("xxx斩杀多少怪物当前等级xx"));
+
+			ADCGameState* DCGameState = Cast<ADCGameState>(UGameplayStatics::GetGameState(this));
+			ADCPlayerState* DCPlayerState = GetPlayerState<ADCPlayerState>();
+			if (DCGameState && DCPlayerState)
+			{
+				TArray<ADCPlayerState*> TopPlayerStates = DCGameState->TopScorePlayerStates;
+				FString InfoText;
+				if (TopPlayerStates.Num() == 0)
+				{
+					InfoText = FString("Narrowly Escaped");
+				}else if (TopPlayerStates.Num() == 1 && TopPlayerStates[0] == DCPlayerState)
+				{
+					InfoText = FString::Printf(TEXT("You are the MVP \n Get %f points in this game"), DCPlayerState->GetScore());
+				}else if (TopPlayerStates.Num() == 1)
+				{
+					InfoText = FString::Printf(TEXT("%s is the MVP\n You Get %f points in this game"),
+						*TopPlayerStates[0]->GetPlayerName(), DCPlayerState->GetScore());
+					//UE_LOG(LogTemp, Warning, TEXT("dddd%f"), DCGameState->TopScore);DCGameState on server
+				}else if (TopPlayerStates.Num() > 1)
+				{
+					InfoText = FString("Player tied for the win:\n");
+					for(auto TiedPlayer : TopPlayerStates)
+					{
+						InfoText.Append(FString::Printf(TEXT("%s\n"), *TiedPlayer->GetPlayerName()));
+					}
+					InfoText.Append(FString::Printf(TEXT("You Get %f points in this game"), DCPlayerState->GetScore()));
+				}
+				DCHud->WarmUpWidget->Info->SetText(FText::FromString(InfoText));
+			}
 		}
 	}
 
