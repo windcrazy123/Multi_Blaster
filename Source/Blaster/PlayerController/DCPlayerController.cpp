@@ -318,6 +318,13 @@ void ADCPlayerController::HandleMatchCooldown()
 			DCHud->WarmUpWidget->Info->SetText(FText::FromString("xxx斩杀多少怪物当前等级xx"));
 		}
 	}
+
+	//Disable Input
+	ABlasterCharacter* DCCharacter = Cast<ABlasterCharacter>(GetPawn());
+	if (DCCharacter)
+	{
+		DCCharacter->DisableInputMore(true);
+	}
 }
 
 // poll init

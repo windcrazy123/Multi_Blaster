@@ -585,6 +585,14 @@ void ABlasterCharacter::MultiEliminate_Implementation()
 	}
 	StartDissolve();
 
+	
+	DisableInputMore(false);
+	
+	//
+	//SetCanBeDamaged(false);
+}
+void ABlasterCharacter::DisableInputMore(bool bRestartGame)
+{
 	//disable character movement
 	GetCharacterMovement()->DisableMovement();//MOVE_NONE 没办法wasd
 	GetCharacterMovement()->StopMovementImmediately();//把旋转角色也禁用了
@@ -595,8 +603,34 @@ void ABlasterCharacter::MultiEliminate_Implementation()
 	//disable collision
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	//
-	//SetCanBeDamaged(false);
+
+	//Restart Game
+	if (bRestartGame)
+	{
+		//deEquipWeapon
+		GetCharacterMovement()->bOrientRotationToMovement = true;
+		bUseControllerRotationYaw = false;
+		
+		if (CombatComponent)
+		{
+			//stop fire
+			CombatComponent->SetFireButtonPressed(false);
+			//Destroy weapon and stop equipment animation
+			if(CombatComponent->EquippedWeapon)
+			{
+				CombatComponent->EquippedWeapon->Destroy();
+				CombatComponent->EquippedWeapon = nullptr;
+			}
+		}
+		//视角转到前方且禁止旋转
+		if (CameraBoom)
+		{
+			CameraBoom->bUsePawnControlRotation = false;
+			FRotator NewRotation(-10.f, -80.f, 0.f);
+			CameraBoom->SetRelativeRotation(NewRotation);
+			CameraBoom->bDoCollisionTest = false;
+		}
+	}
 }
 
 void ABlasterCharacter::PlayElimMontage()

@@ -30,6 +30,12 @@ public:
 	void Reload();
 	UFUNCTION(BlueprintCallable)
 	void FinishReloading();
+
+	/*
+	 * Disable Input
+	 */
+
+	void SetFireButtonPressed(bool bIsCanFire);
 protected:
 	virtual void BeginPlay() override;
 

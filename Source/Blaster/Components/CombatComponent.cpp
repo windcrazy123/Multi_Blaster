@@ -495,3 +495,8 @@ void UCombatComponent::InitializeCarriedAmmo()
 {
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_AssaultRifle, StartingARAmmo);
 }
+
+void UCombatComponent::SetFireButtonPressed(bool bIsCanFire)
+{
+	bFireButtonPressed = bIsCanFire;
+}

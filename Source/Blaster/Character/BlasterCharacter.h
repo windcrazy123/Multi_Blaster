@@ -216,4 +216,11 @@ public:
 	void PlayReloadMontage();
 
 	ECombatState GetCombatState() const;
+
+	/*
+	 * RestartGame
+	 */
+
+	FORCEINLINE UCombatComponent* GetCombatComponent() const { return CombatComponent; }
+	void DisableInputMore(bool bRestartGame);
 };

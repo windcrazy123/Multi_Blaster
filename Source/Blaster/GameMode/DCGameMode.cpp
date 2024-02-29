@@ -63,6 +63,12 @@ void ADCGameMode::Tick(float DeltaSeconds)
 	else if (MatchState == MatchState::Cooldown)
 	{
 		CountdownTime = CooldownTime+WarmupTime+LevelTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+
+		//结束一关结算后的动作，目前为 virtual RestartGame();
+		if (CountdownTime <= 0.f)
+		{
+			RestartGame();
+		}
 	}
 }
 
