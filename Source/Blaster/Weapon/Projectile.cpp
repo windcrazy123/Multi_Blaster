@@ -3,9 +3,9 @@
 
 #include "Projectile.h"
 
-#include "Blaster/Character/BlasterCharacter.h"
+//#include "Blaster/Character/BlasterCharacter.h"
 #include "Components/BoxComponent.h"
-#include "GameFramework/ProjectileMovementComponent.h"
+//#include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundCue.h"
 #include "Blaster/Blaster.h"
@@ -26,10 +26,10 @@ AProjectile::AProjectile()
 	BoxCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 	BoxCollision->SetCollisionResponseToChannel(ECC_SkeletalMesh, ECollisionResponse::ECR_Block);//blaster.h
 
-	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
-	ProjectileMovementComponent->bRotationFollowsVelocity = true;
-	ProjectileMovementComponent->InitialSpeed = 93000.f;
-	ProjectileMovementComponent->MaxSpeed = 93000.f;
+	// ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
+	// ProjectileMovementComponent->bRotationFollowsVelocity = true;
+	// ProjectileMovementComponent->InitialSpeed = 93000.f;
+	// ProjectileMovementComponent->MaxSpeed = 93000.f;
 }
 
 void AProjectile::BeginPlay()
