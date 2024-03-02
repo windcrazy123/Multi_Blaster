@@ -124,6 +124,7 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	class UWidgetComponent* PickupWidget;
 
+	//multi
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 	class UAnimationAsset* FireAnimation;
 
@@ -146,7 +147,7 @@ private:
 	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
 	int32 Ammo;
 	
-	void SpendRound();
+	void SpendAmmo();
 	UFUNCTION()
 	void OnRep_Ammo();
 

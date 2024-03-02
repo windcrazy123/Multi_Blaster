@@ -171,7 +171,7 @@ void AWeapon::Fire(const FVector& HitTarget)
 	}
 
 	//Ammo
-	SpendRound();
+	SpendAmmo();
 }
 
 void AWeapon::Drop()
@@ -202,7 +202,7 @@ void AWeapon::OnRep_Owner()
 	}
 }
 
-void AWeapon::SpendRound()
+void AWeapon::SpendAmmo()
 {
 	Ammo = FMath::Clamp(Ammo-1, 0, MagCapacity);
 
