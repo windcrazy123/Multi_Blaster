@@ -153,7 +153,7 @@ void AWeapon::Fire(const FVector& HitTarget)
 		WeaponMesh->PlayAnimation(FireAnimation, false);
 	}
 
-	//为什么这个多播，生成子弹不多播
+	//这个多播，生成子弹不多播
 	if (BulletShellClass)
 	{
 		const USkeletalMeshSocket* AmmoEjectSocket = WeaponMesh->GetSocketByName(FName("AmmoEject"));
