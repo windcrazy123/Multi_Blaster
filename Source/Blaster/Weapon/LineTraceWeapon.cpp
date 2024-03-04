@@ -14,83 +14,94 @@
 void ALineTraceWeapon::Fire(const FVector& HitTarget)
 {
 	Super::Fire(HitTarget);
+	
+	WeaponTraceHit(HitTarget);
+}
 
-	APawn* OwnerPawn = Cast<APawn>(GetOwner());
-	if (OwnerPawn == nullptr) return;
-
+void ALineTraceWeapon::WeaponTraceHit(const FVector& HitTarget)
+{
+	// APawn* OwnerPawn = Cast<APawn>(GetOwner());
+	// if (OwnerPawn == nullptr) return;
+	
 	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName("MuzzleFlash");
 	if (MuzzleFlashSocket/* && InstigatorController 客户端只有自己的Controller*/)
 	{
 		FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
 		FVector Start = SocketTransform.GetLocation();
-		FVector End = Start + (HitTarget - Start) * 1.25f;
-
-		FHitResult FireHit;
+		//FVector End = Start + (HitTarget - Start) * 1.25f;
+		
 		//LineTraceSingleByChannel
-		WeaponTraceHit(Start, HitTarget, FireHit, End);
-
-		FVector LaserTarget = End;
-		if(FireHit.bBlockingHit)
-		{
-			LaserTarget = FireHit.ImpactPoint;
-			
-			//ApplyDamage
-			ABlasterCharacter* DamagedCharacter = Cast<ABlasterCharacter>(FireHit.GetActor());
-            AController* InstigatorController = OwnerPawn->GetController();
-             if (DamagedCharacter && HasAuthority() && InstigatorController)
-             {
-                 UGameplayStatics::ApplyDamage(
-                    DamagedCharacter, Damage,
-                    InstigatorController, this,
-                    UDamageType::StaticClass()
-                 );
-             }
-     
-            //multi Effect
-            if (ImpactParticles)
-             {
-                 UGameplayStatics::SpawnEmitterAtLocation(
-                    GetWorld(),
-                    ImpactParticles,
-                    FireHit.ImpactPoint
-                 );
-             }
-            if (HitSound)
-             {
-                 UGameplayStatics::PlaySoundAtLocation(
-                    this,
-                    HitSound,
-                    FireHit.ImpactPoint
-                 );
-             }
-		}
-
-		if (LaserParticles)
-		{
-			UNiagaraComponent* Laser = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-				this,
-				LaserParticles,
-				SocketTransform.GetLocation()
-			);
-			if (Laser)
-			{
-				LaserTarget = LaserTarget - SocketTransform.GetLocation();
-				Laser->SetNiagaraVariableVec3(FString("Target"), LaserTarget);
-			}
-		}
+		SingleLineTrace(Start, HitTarget);
 	}
+	
 }
 
-void ALineTraceWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& HitTarget, FHitResult& OutHit, FVector& End)
+void ALineTraceWeapon::SingleLineTrace(const FVector& TraceStart, const FVector& HitTarget)
 {
+	APawn* OwnerPawn = Cast<APawn>(GetOwner());
+	if (OwnerPawn == nullptr) return;
+	
+	FHitResult FireHit;
+	
 	UWorld* World = GetWorld();
-	if (World)
+ 	if (World)
+ 	{
+ 		World->LineTraceSingleByChannel(
+ 			FireHit,
+ 			TraceStart,
+ 			HitTarget,
+ 			ECollisionChannel::ECC_Visibility
+ 		);
+ 	}
+
+	FVector LaserTarget = HitTarget;
+	if(FireHit.bBlockingHit)
 	{
-		World->LineTraceSingleByChannel(
-			OutHit,
-			TraceStart,
-			End,
-			ECollisionChannel::ECC_Visibility
+		LaserTarget = FireHit.ImpactPoint;
+			
+		//ApplyDamage
+		ABlasterCharacter* DamagedCharacter = Cast<ABlasterCharacter>(FireHit.GetActor());
+		AController* InstigatorController = OwnerPawn->GetController();
+		if (DamagedCharacter && HasAuthority() && InstigatorController)
+		{
+			UGameplayStatics::ApplyDamage(
+			   DamagedCharacter, Damage,
+			   InstigatorController, this,
+			   UDamageType::StaticClass()
+			);
+		}
+     
+		//multi Effect
+		if (ImpactParticles)
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(
+			   GetWorld(),
+			   ImpactParticles,
+			   FireHit.ImpactPoint
+			);
+		}
+		if (HitSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(
+			   this,
+			   HitSound,
+			   FireHit.ImpactPoint
+			);
+		}
+	}
+
+	if (LaserParticles)
+	{
+		UNiagaraComponent* Laser = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			this,
+			LaserParticles,
+			TraceStart
 		);
+		if (Laser)
+		{
+			LaserTarget = LaserTarget - TraceStart;
+			Laser->SetNiagaraVariableVec3(FString("Target"), LaserTarget);
+		}
 	}
 }
+

@@ -145,7 +145,7 @@ void AWeapon::OnRep_WeaponState()
 	}
 }
 
-// be multicasted
+// be multicasted HitTarget is trace end point or hit point
 void AWeapon::Fire(const FVector& HitTarget)
 {
 	if (FireAnimation)

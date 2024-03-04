@@ -17,10 +17,10 @@ public:
 	virtual void Fire(const FVector& HitTarget) override;
 
 protected:
-	void WeaponTraceHit(const FVector& TraceStart, const FVector& HitTarget, FHitResult& OutHit, FVector& End);
+	virtual void WeaponTraceHit(const FVector& HitTarget);
 
 	
-	
+	void SingleLineTrace(const FVector& TraceStart, const FVector& HitTarget);
 private:
 	UPROPERTY(EditAnywhere)
 	class UNiagaraSystem* LaserParticles;

@@ -11,7 +11,6 @@
 
 #include "CombatComponent.generated.h"
 
-#define FIRE_TRACE_LENGTH 80000.f
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class BLASTER_API UCombatComponent : public UActorComponent
@@ -153,6 +152,9 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	int32 StartingPistolAmmo = 45;
+
+	UPROPERTY(EditAnywhere)
+	int32 StartingShotgunAmmo = 30;
 
 	void InitializeCarriedAmmo();
 
