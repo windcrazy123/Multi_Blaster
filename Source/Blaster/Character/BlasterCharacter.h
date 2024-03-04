@@ -223,4 +223,10 @@ public:
 
 	FORCEINLINE UCombatComponent* GetCombatComponent() const { return CombatComponent; }
 	void DisableInputMore(bool bRestartGame);
+
+	//狙击枪
+	UFUNCTION(BlueprintImplementableEvent)
+	void ShowSniperScopeWidget(bool bShowScope);
+	UFUNCTION(BlueprintImplementableEvent)
+	void RemoveSniperScopeWidget();
 };

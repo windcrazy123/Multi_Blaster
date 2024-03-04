@@ -165,6 +165,8 @@ void UCombatComponent::InterpFOV(float DeltaTime)
 
 void UCombatComponent::SetAiming(bool bIsAiming)
 {
+	if(Character == nullptr || EquippedWeapon == nullptr) return;
+	
 	//first set in locate, then set this boolean by RPC, so that we don't need wait for network delay
 	bAiming = bIsAiming;
 	//if(!Character->HasAuthority())
@@ -173,6 +175,12 @@ void UCombatComponent::SetAiming(bool bIsAiming)
 	{
 		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
 		Character->GetCharacterMovement()->MaxWalkSpeedCrouched = bIsAiming ? AimCrouchSpeed : BaseCrouchSpeed;
+	}
+
+	//狙击枪开镜
+	if (Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle)
+	{
+		Character->ShowSniperScopeWidget(bIsAiming);
 	}
 }
 void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming)
@@ -497,6 +505,7 @@ void UCombatComponent::InitializeCarriedAmmo()
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_RocketLauncher, StartingRocketAmmo);
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_Pistol, StartingPistolAmmo);
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_Shotgun, StartingShotgunAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_SniperRifle, StartingSniperAmmo);
 }
 
 void UCombatComponent::SetFireButtonPressed(bool bIsCanFire)

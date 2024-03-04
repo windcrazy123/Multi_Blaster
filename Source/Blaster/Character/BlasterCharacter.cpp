@@ -562,7 +562,6 @@ void ABlasterCharacter::Eliminate()
 	MultiEliminate();
 	GetWorldTimerManager().SetTimer(ElimTimer, this, &ABlasterCharacter::ElimTimerFinished, ElimDelay);
 }
-
 void ABlasterCharacter::MultiEliminate_Implementation()
 {
 	//Ammo
@@ -590,6 +589,14 @@ void ABlasterCharacter::MultiEliminate_Implementation()
 	
 	//
 	//SetCanBeDamaged(false);
+
+	//狙击枪
+	if (IsLocallyControlled() && CombatComponent && CombatComponent->bAiming
+		&& CombatComponent->EquippedWeapon
+		&& CombatComponent->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle)
+	{
+		RemoveSniperScopeWidget();
+	}
 }
 void ABlasterCharacter::DisableInputMore(bool bRestartGame)
 {
