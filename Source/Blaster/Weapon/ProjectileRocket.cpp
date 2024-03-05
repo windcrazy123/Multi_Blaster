@@ -44,7 +44,7 @@ void AProjectileRocket::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
 		return;
 	}
 	
-	APawn* FiringPawn = GetInstigator();
+	/*APawn* FiringPawn = GetInstigator();
 	if (FiringPawn)
 	{
 		AController* FiringController = FiringPawn->GetController();
@@ -61,7 +61,8 @@ void AProjectileRocket::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
 				FiringController//,ECollisionChannel::ECC_Visibility
 			);
 		}
-	}
+	}*/
+	RadialDamage();
 	
 	Super::OnHit(HitComp, OtherActor, OtherComp, NormalImpulse, HitResult);
 }

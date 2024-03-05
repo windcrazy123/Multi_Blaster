@@ -26,12 +26,16 @@ protected:
 	/*
 	 * Player Health
 	 */
+	
 	UPROPERTY(EditAnywhere)
 	float Damage = 20.f;
 
 	
 	UPROPERTY(VisibleAnywhere)
 	class UProjectileMovementComponent* ProjectileMovementComponent;
+
+	void RadialDamage();
+	void PointDamage(AActor* OtherActor);
 private:
 	UPROPERTY(EditAnywhere)
 	class UBoxComponent* BoxCollision;
@@ -47,4 +51,12 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	class USoundCue* ImpactSound;
+
+	//RadialDamage
+	UPROPERTY(EditDefaultsOnly, Category = "RadialDamage")
+	float MinimumDamage = 10.f;
+	UPROPERTY(EditDefaultsOnly, Category = "RadialDamage")
+	float DamageInnerRadius = 200.f;
+	UPROPERTY(EditDefaultsOnly, Category = "RadialDamage")
+	float DamageOuterRadius = 500.f;
 };

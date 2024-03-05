@@ -19,15 +19,16 @@ AProjectileBullet::AProjectileBullet()
 void AProjectileBullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
                               FVector NormalImpulse, const FHitResult& HitResult)
 {
-	ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
-	if (OwnerCharacter)
-	{
-		AController* OwnerController = OwnerCharacter->Controller;
-		if (OwnerController)
-		{
-			UGameplayStatics::ApplyDamage(OtherActor, Damage, OwnerController, this, UDamageType::StaticClass());
-		}
-	}
+	/* ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
+	// if (OwnerCharacter)
+	// {
+	// 	AController* OwnerController = OwnerCharacter->Controller;
+	// 	if (OwnerController)
+	// 	{
+	// 		UGameplayStatics::ApplyDamage(OtherActor, Damage, OwnerController, this, UDamageType::StaticClass());
+	// 	}
+	/ }*/
+	PointDamage(OtherActor);
 	
 	Super::OnHit(HitComp, OtherActor, OtherComp, NormalImpulse, HitResult);
 }

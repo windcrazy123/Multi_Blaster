@@ -80,6 +80,42 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 	Destroy();
 }
 
+void AProjectile::RadialDamage()
+{
+	APawn* FiringPawn = GetInstigator();
+	if (FiringPawn)
+	{
+		AController* FiringController = FiringPawn->GetController();
+		if (FiringController)
+		{
+			UGameplayStatics::ApplyRadialDamageWithFalloff(this,
+				Damage,
+				MinimumDamage,
+				GetActorLocation(),
+				DamageInnerRadius, DamageOuterRadius,
+				1.f,
+				UDamageType::StaticClass(),
+				TArray<AActor*>(),
+				this,
+				FiringController//,ECollisionChannel::ECC_Visibility
+			);
+		}
+	}
+}
+
+void AProjectile::PointDamage(AActor* OtherActor)
+{
+	APawn* OwnerCharacter = GetInstigator();
+	if (OwnerCharacter)
+	{
+		AController* OwnerController = OwnerCharacter->GetController();
+		if (OwnerController)
+		{
+			UGameplayStatics::ApplyDamage(OtherActor, Damage, OwnerController, this, UDamageType::StaticClass());
+		}
+	}
+}
+
 void AProjectile::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
