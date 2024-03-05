@@ -30,6 +30,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void FinishReloading();
 
+	UFUNCTION(BlueprintCallable)
+	void ShotgunReloadIn();
+
 	/*
 	 * Disable Input
 	 */

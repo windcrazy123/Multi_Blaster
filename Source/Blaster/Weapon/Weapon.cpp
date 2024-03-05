@@ -211,6 +211,11 @@ void AWeapon::SpendAmmo()
 
 void AWeapon::OnRep_Ammo()
 {
+	if(OwnerCharacter == nullptr) OwnerCharacter = Cast<ABlasterCharacter>(GetOwner());
+	if (OwnerCharacter && IsFull())
+	{
+		OwnerCharacter->JumptoEndSection();
+	}
 	SetHUDAmmo();
 }
 

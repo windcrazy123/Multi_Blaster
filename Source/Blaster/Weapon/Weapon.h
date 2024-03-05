@@ -80,6 +80,7 @@ public:
 	void SetHUDAmmo();
 
 	FORCEINLINE bool IsEmpty() const { return Ammo <= 0; }
+	FORCEINLINE bool IsFull() const { return Ammo == MagCapacity; }
 
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
 

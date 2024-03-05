@@ -217,6 +217,8 @@ public:
 
 	ECombatState GetCombatState() const;
 
+	void JumptoEndSection();
+
 	/*
 	 * RestartGame
 	 */

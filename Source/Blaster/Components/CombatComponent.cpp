@@ -385,7 +385,7 @@ void UCombatComponent::OnRep_EquippedWeapon()
 void UCombatComponent::Reload()
 {
 	if (CarriedAmmo > 0 && CombatState == ECombatState::ECS_Unoccupied && EquippedWeapon
-		/*&& !EquippedWeapon->IsFull() && !bLocallyReloading*/)
+		&& !EquippedWeapon->IsFull() /*&& !bLocallyReloading*/)
 	{
 		ServerReload();
 		//HandleReload();
@@ -399,20 +399,6 @@ void UCombatComponent::ServerReload_Implementation()
 	CombatState = ECombatState::ECS_Reloading;
 	//if (!Character->IsLocallyControlled())
 		HandleReload();
-}
-void UCombatComponent::FinishReloading()
-{
-	if (Character == nullptr) return;
-	//bLocallyReloading = false;
-	if (Character->HasAuthority())
-	{
-		CombatState = ECombatState::ECS_Unoccupied;
-		UpdateAmmoValues();
-	}
-	if (bFireButtonPressed)
-	{
-		Fire();
-	}
 }
 void UCombatComponent::OnRep_CombatState()
 {
@@ -453,22 +439,26 @@ void UCombatComponent::HandleReload()
 		Character->PlayReloadMontage();
 	}
 }
-int32 UCombatComponent::ReloadAmmoAmount()
+
+void UCombatComponent::FinishReloading()
 {
-	if(EquippedWeapon == nullptr) return 0;
-	int32 IntoMagAmmo = EquippedWeapon->GetMagCapacity() - EquippedWeapon->GetAmmo();
-	if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
+	if (Character == nullptr) return;
+	//bLocallyReloading = false;
+	if (Character->HasAuthority())
 	{
-		int32 CarriedAmmoNum = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
-		int32 LeastNum = FMath::Min(IntoMagAmmo, CarriedAmmoNum);
-		//return LeastNum;
-		return FMath::Clamp(IntoMagAmmo, 0, LeastNum);
+		CombatState = ECombatState::ECS_Unoccupied;
+		UpdateAmmoValues();
 	}
-	return 0;
+	if (bFireButtonPressed)
+	{
+		Fire();
+	}
 }
 void UCombatComponent::UpdateAmmoValues()
 {
 	if (Character == nullptr || EquippedWeapon == nullptr) return;
+	if(EquippedWeapon->IsFull()) return;
+	
 	int32 ReloadAmmoNum = ReloadAmmoAmount();
 	if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
 	{
@@ -482,7 +472,43 @@ void UCombatComponent::UpdateAmmoValues()
 		Controller->SetHUDCarriedAmmo(CarriedAmmo);
 	}
 }
-
+int32 UCombatComponent::ReloadAmmoAmount()
+{
+	if(EquippedWeapon == nullptr) return 0;
+	int32 IntoMagAmmo = EquippedWeapon->GetMagCapacity() - EquippedWeapon->GetAmmo();
+	if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
+	{
+		int32 CarriedAmmoNum = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
+		int32 LeastNum = FMath::Min(IntoMagAmmo, CarriedAmmoNum);
+		//return LeastNum;
+		return FMath::Clamp(IntoMagAmmo, 0, LeastNum);
+	}
+	return 0;
+}
+void UCombatComponent::ShotgunReloadIn()
+{
+	if (Character && Character->HasAuthority())
+	{
+		if (Character == nullptr || EquippedWeapon == nullptr) return;
+        if(EquippedWeapon->GetWeaponType() != EWeaponType::EWT_Shotgun && EquippedWeapon->IsFull()) return;
+    
+        if (CarriedAmmoMap.Contains(EWeaponType::EWT_Shotgun))
+        {
+        	--CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
+        	CarriedAmmo = CarriedAmmoMap[EWeaponType::EWT_Shotgun];
+        }
+        EquippedWeapon->AddAmmo(1);
+        if (Controller == nullptr) Controller = Cast<ADCPlayerController>(Character->Controller);
+        if (Controller)
+        {
+        	Controller->SetHUDCarriedAmmo(CarriedAmmo);
+        }
+        if (EquippedWeapon->IsFull() || CarriedAmmo == 0)
+        {
+        	Character->JumptoEndSection();//onrep_carriedammo on clint 保留实现
+        }
+	}
+}
 
 bool UCombatComponent::CanFire()
 {

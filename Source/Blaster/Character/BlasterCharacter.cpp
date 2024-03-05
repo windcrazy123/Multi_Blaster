@@ -666,11 +666,26 @@ void ABlasterCharacter::PlayReloadMontage()
 		case EWeaponType::EWT_AssaultRifle:
 			SectionName = FName("Rifle");
 			break;
+		case EWeaponType::EWT_Pistol:
+			SectionName = FName("Pistol");
+			break;
+		case EWeaponType::EWT_Shotgun:
+			SectionName = FName("Shotgun");
+			break;
 		default:
 			SectionName = FName("Rifle");
 			break;
 		}
 		AnimInstance->Montage_JumpToSection(SectionName, ReloadMontage);
+	}
+}
+
+void ABlasterCharacter::JumptoEndSection()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && ReloadMontage)
+	{
+		AnimInstance->Montage_JumpToSection(FName("ShotgunEnd"), ReloadMontage);
 	}
 }
 
