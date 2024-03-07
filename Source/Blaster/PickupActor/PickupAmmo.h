@@ -24,9 +24,6 @@ private:
 	
 	UPROPERTY(EditAnywhere, Category = "PickupProperties")
 	EWeaponType AmmoType;
-	
-	UPROPERTY(EditAnywhere, Category = "PickupProperties")
-	class USoundCue* PickupSound;
 
 	UPROPERTY(EditAnywhere, Category = "PickupProperties")
 	int32 AmmoCount;

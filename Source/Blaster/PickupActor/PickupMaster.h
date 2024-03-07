@@ -15,6 +15,7 @@ class BLASTER_API APickupMaster : public AActor
 public:
 	APickupMaster();
 	virtual void Tick(float DeltaTime) override;
+	virtual void Destroyed() override;
 
 protected:
 	virtual void BeginPlay() override;
@@ -35,6 +36,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess="true"))
 	UStaticMeshComponent* PickupMesh;
+	
+	UPROPERTY(EditAnywhere, Category = "PickupProperties")
+	class USoundCue* PickupSound;
 
 	float Offset = 0.f;
 	UPROPERTY(EditAnywhere, Category = "PickupProperties|Movement")

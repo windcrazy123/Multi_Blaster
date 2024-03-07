@@ -4,8 +4,6 @@
 #include "PickupAmmo.h"
 
 #include "Blaster/Character/BlasterCharacter.h"
-#include "Kismet/GameplayStatics.h"
-#include "Sound/SoundCue.h"
 
 void APickupAmmo::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
                                        UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -16,14 +14,6 @@ void APickupAmmo::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent,
 	if (PlayerCharacter)
 	{
 		PlayerCharacter->PickupAmmo(AmmoType, AmmoCount);
-	}
-
-	if (PickupSound)
-	{
-		UGameplayStatics::PlaySoundAtLocation(this,
-			PickupSound,
-			GetActorLocation()
-		);
 	}
 	
 	Destroy();

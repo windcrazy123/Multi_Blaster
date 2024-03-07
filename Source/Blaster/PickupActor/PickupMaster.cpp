@@ -4,6 +4,8 @@
 #include "PickupMaster.h"
 
 #include "Components/SphereComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Sound/SoundCue.h"
 
 APickupMaster::APickupMaster()
 {
@@ -43,6 +45,20 @@ void APickupMaster::Tick(float DeltaTime)
 		OverlapSphereComponent->AddWorldRotation(FRotator(0.f, DeltaTime*RotateSpeed, 0.f));
 		Offset += DeltaTime*OffsetSpeed;
 		OverlapSphereComponent->SetRelativeLocation(FVector(0.f, 0.f, sin(Offset)*OffsetExtension));
+	}
+}
+
+void APickupMaster::Destroyed()
+{
+	Super::Destroyed();
+	
+	if (PickupSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			PickupSound,
+			GetActorLocation()
+		);
 	}
 }
 
