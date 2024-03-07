@@ -724,3 +724,10 @@ ECombatState ABlasterCharacter::GetCombatState() const
 	return  CombatComponent->CombatState;
 }
 
+void ABlasterCharacter::PickupAmmo(EWeaponType WeaponType, int32 AmmoNum)
+{
+	if (CombatComponent)
+	{
+		CombatComponent->PickupAmmo(WeaponType, AmmoNum);
+	}
+}

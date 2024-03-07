@@ -139,6 +139,7 @@ private:
 	/*
 	 * 携带子弹数
 	 */
+	
 	//指携带的当前武器种类所属子弹类型的数量
 	UPROPERTY(ReplicatedUsing = OnRep_CarriedAmmo)
 	int32 CarriedAmmo;
@@ -178,4 +179,13 @@ private:
 
 	//update ammo and carried ammo number
 	void UpdateAmmoValues();
+
+	/*
+	 * Pickup
+	 */
+public:
+	void PickupAmmo(EWeaponType WeaponType, int32 AmmoNum);
+private:
+	//如果子弹同属当前装备的武器则更新HUD
+	void UpdateCarriedAmmo();
 };

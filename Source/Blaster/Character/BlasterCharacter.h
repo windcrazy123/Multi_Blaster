@@ -13,6 +13,8 @@
 #include "BlasterCharacter.generated.h"
 
 
+enum class EWeaponType : uint8;
+
 UCLASS()
 class BLASTER_API ABlasterCharacter : public ACharacter, public ICrosshairInteraction
 {
@@ -231,4 +233,10 @@ public:
 	void ShowSniperScopeWidget(bool bShowScope);
 	UFUNCTION(BlueprintImplementableEvent)
 	void RemoveSniperScopeWidget();
+
+	/*
+	 * Pickup
+	 */
+public:
+	void PickupAmmo(EWeaponType WeaponType, int32 AmmoNum);
 };

@@ -345,15 +345,7 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	EquippedWeapon->SetHUDAmmo();
 
 	//CarriedAmmo
-	if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
-	{
-		CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
-	}
-	if (Controller == nullptr) Controller = Cast<ADCPlayerController>(Character->Controller);
-	if (Controller)
-	{
-		Controller->SetHUDCarriedAmmo(CarriedAmmo);
-	}
+	UpdateCarriedAmmo();
 	
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;
@@ -538,4 +530,28 @@ void UCombatComponent::InitializeCarriedAmmo()
 void UCombatComponent::SetFireButtonPressed(bool bIsCanFire)
 {
 	bFireButtonPressed = bIsCanFire;
+}
+
+void UCombatComponent::PickupAmmo(EWeaponType WeaponType, int32 AmmoNum)
+{
+	if (CarriedAmmoMap.Contains(WeaponType))
+	{
+		CarriedAmmoMap[WeaponType] += AmmoNum;
+		UpdateCarriedAmmo();
+	}
+}
+
+void UCombatComponent::UpdateCarriedAmmo()
+{
+	if (EquippedWeapon == nullptr) return;
+	if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
+	{
+		CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
+	}
+
+	if(Controller == nullptr) Cast<ADCPlayerController>(Character->Controller);
+	if (Controller)
+	{
+		Controller->SetHUDCarriedAmmo(CarriedAmmo);
+	}
 }
