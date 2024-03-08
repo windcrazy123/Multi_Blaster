@@ -4,6 +4,7 @@
 #include "BuffComponent.h"
 
 #include "Blaster/Character/BlasterCharacter.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 UBuffComponent::UBuffComponent()
 {
@@ -47,6 +48,33 @@ void UBuffComponent::BuffOfHealth(float NumOfHealth, float IncreasedMaxHealth)
         }
 	}
 	
+}
+
+void UBuffComponent::BuffOfSpeed(float NewWalkSpeed, float NewCrouchSpeed, float BuffTime)
+{
+	if (PlayerCharacter)
+	{
+		MultiChangeSpeed(NewWalkSpeed, NewCrouchSpeed);
+		
+		PlayerCharacter->GetWorldTimerManager().SetTimer(
+			SpeedBuffTimerHandle,
+			this, &UBuffComponent::ResetSpeed,
+			BuffTime,
+			false
+		);
+	}
+}
+void UBuffComponent::ResetSpeed()
+{
+	MultiChangeSpeed(InitWalkSpeed, InitCrouchSpeed);
+}
+void UBuffComponent::MultiChangeSpeed_Implementation(float WalkSpeed, float CrouchSpeed)
+{
+	if (PlayerCharacter && PlayerCharacter->GetCharacterMovement())
+	{
+		PlayerCharacter->GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+		PlayerCharacter->GetCharacterMovement()->MaxWalkSpeedCrouched = CrouchSpeed;
+	}
 }
 
 

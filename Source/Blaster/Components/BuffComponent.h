@@ -26,5 +26,17 @@ private:
 public:
 	void BuffOfHealth(float NumOfHealth, float IncreasedMaxHealth);
 
+	void BuffOfSpeed(float WalkSpeed, float CrouchSpeed, float BuffTime);
+
+private:
+	FTimerHandle SpeedBuffTimerHandle;
+
+	UFUNCTION()
+	void ResetSpeed();
+	UFUNCTION(NetMulticast, Reliable)
+	void MultiChangeSpeed(float WalkSpeed, float CrouchSpeed);
+
+	float InitWalkSpeed;
+	float InitCrouchSpeed;
 		
 };

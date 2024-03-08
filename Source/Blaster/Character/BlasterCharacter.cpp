@@ -86,6 +86,12 @@ void ABlasterCharacter::PostInitializeComponents()
 	if (BuffComponent)
 	{
 		BuffComponent->PlayerCharacter = this;
+		if (GetCharacterMovement())
+		{
+			BuffComponent->InitWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
+			BuffComponent->InitCrouchSpeed = GetCharacterMovement()->MaxWalkSpeedCrouched;
+		}
+		
 	}
 }
 

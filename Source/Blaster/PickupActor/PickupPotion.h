@@ -6,6 +6,15 @@
 #include "PickupMaster.h"
 #include "PickupPotion.generated.h"
 
+UENUM(BlueprintType)
+enum class EPotionType : uint8
+{
+	EPT_Health UMETA(DisplayName = "Health Potion"),
+	EPT_Speed UMETA(DisplayName = "Speed Potion"),
+
+	EPT_MAX UMETA(DisplayName = "DefaultMAX")
+};
+
 /**
  * 
  */
@@ -21,19 +30,26 @@ protected:
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
 
 private:
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "PotionProperties")
 	class UNiagaraSystem* PickupEffect;
 	UPROPERTY()
 	class UNiagaraComponent* PickupEffectComponent;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "PotionProperties")
 	FLinearColor EffectColor;
 
 	UPROPERTY()
 	class ABlasterCharacter* PlayerCharacter;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "PotionProperties")
 	float PotionAmount;
-	//药水额外技能，比如血瓶增加的血上限数量
-	UPROPERTY(EditAnywhere)
+	//药水额外技能，比如血瓶增加的血上限数量，速度的蹲下行走速度
+	UPROPERTY(EditAnywhere, Category = "PotionProperties")
 	float BuffOfPotion;
+
+	//暂时有些是永久的，考虑以后添加布尔变量
+	UPROPERTY(EditAnywhere, Category = "PotionProperties")
+	float BuffTime;
+
+	UPROPERTY(EditAnywhere)
+	EPotionType PotionType;
 };

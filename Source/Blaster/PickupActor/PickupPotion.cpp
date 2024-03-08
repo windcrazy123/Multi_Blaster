@@ -41,7 +41,6 @@ void APickupPotion::Destroyed()
 	Super::Destroyed();
 }
 
-//暂时只有血瓶，如果后期增加则使用PotionType进行switch
 void APickupPotion::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
@@ -50,7 +49,17 @@ void APickupPotion::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponen
 	PlayerCharacter = Cast<ABlasterCharacter>(OtherActor);
 	if (PlayerCharacter)
 	{
-		PlayerCharacter->GetBuffComponent()->BuffOfHealth(PotionAmount, BuffOfPotion);
+		switch (PotionType)
+		{
+		case EPotionType::EPT_Health:
+			PlayerCharacter->GetBuffComponent()->BuffOfHealth(PotionAmount, BuffOfPotion);
+			break;
+		case  EPotionType::EPT_Speed:
+			PlayerCharacter->GetBuffComponent()->BuffOfSpeed(PotionAmount, BuffOfPotion, BuffTime);
+			break;
+		default:
+			break;
+		}
 	}
 	
 	Destroy();
