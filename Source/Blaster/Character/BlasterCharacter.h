@@ -55,8 +55,6 @@ protected:
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
 
-	void UpdateHUDHealth();
-
 	/*
 	 * Score
 	 */
@@ -74,6 +72,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly,meta = (AllowPrivateAccess = "true"))
 	class UCombatComponent* CombatComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly,meta = (AllowPrivateAccess = "true"))
+	class UBuffComponent* BuffComponent;
 	
 	//复制    works only when the variable is changed
 	//UPROPERTY(Replicated)
@@ -116,13 +117,13 @@ private:
 	/*
 	 * Player Health
 	 */
-	UPROPERTY(EditAnywhere, Category = "Player Stats")
+	UPROPERTY(EditAnywhere, Replicated, Category = "Player Stats")
 	float MaxHealth = 100.f;
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_Health, Category = "Player Stats")
 	float CurHealth = 100.f;
 
 	UFUNCTION()
-	void OnRep_Health();
+	void OnRep_Health(float LastHealth);
 
 	UPROPERTY()
 	class ADCPlayerController* DCPlayerController;
@@ -210,7 +211,11 @@ public:
 	 * Player Health
 	 */
 	FORCEINLINE float GetCurHealth() const{ return CurHealth; }
+	FORCEINLINE void SetCurHealth(float Health) { CurHealth = Health; }
 	FORCEINLINE float GetMaxHealth() const{ return MaxHealth; }
+	FORCEINLINE void SetMaxHealth(float Health) { MaxHealth = Health; }
+	
+	void UpdateHUDHealth();
 
 	/*
 	 * Reload
@@ -239,4 +244,6 @@ public:
 	 */
 public:
 	void PickupAmmo(EWeaponType WeaponType, int32 AmmoNum);
+
+	FORCEINLINE UBuffComponent* GetBuffComponent() const { return BuffComponent; }
 };

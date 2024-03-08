@@ -34,7 +34,7 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	class USphereComponent* OverlapSphereComponent;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess="true"))
+	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* PickupMesh;
 	
 	UPROPERTY(EditAnywhere, Category = "PickupProperties")

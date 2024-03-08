@@ -16,7 +16,7 @@ UCLASS()
 class BLASTER_API APickupAmmo : public APickupMaster
 {
 	GENERATED_BODY()
-public:
+protected:
 	virtual void OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
 	

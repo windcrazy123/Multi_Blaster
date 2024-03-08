@@ -13,6 +13,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
 #include "Blaster/Blaster.h"
+#include "Blaster/Components/BuffComponent.h"
 #include "Blaster/GameMode/DCGameMode.h"
 #include "Blaster/PlayerController/DCPlayerController.h"
 #include "Blaster/PlayerState/DCPlayerState.h"
@@ -43,6 +44,9 @@ ABlasterCharacter::ABlasterCharacter()
 	CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	CombatComponent->SetIsReplicated(true);// component dont need GetLifetimeReplicatedProps
 
+	BuffComponent = CreateDefaultSubobject<UBuffComponent>(TEXT("BuffComponent"));
+	BuffComponent->SetIsReplicated(true);
+
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
@@ -69,6 +73,7 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	//DOREPLIFETIME(ABlasterCharacter, OverlappingWeapon);
 	
 	DOREPLIFETIME(ABlasterCharacter, CurHealth);
+	DOREPLIFETIME(ABlasterCharacter, MaxHealth);
 }
 
 void ABlasterCharacter::PostInitializeComponents()
@@ -77,6 +82,10 @@ void ABlasterCharacter::PostInitializeComponents()
 	if (CombatComponent)
 	{
 		CombatComponent->Character = this;
+	}
+	if (BuffComponent)
+	{
+		BuffComponent->PlayerCharacter = this;
 	}
 }
 
@@ -465,14 +474,17 @@ void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 	}
 }
 
-void ABlasterCharacter::OnRep_Health()
+void ABlasterCharacter::OnRep_Health(float LastHealth)
 {
 	if(IsLocallyControlled())
 	{
 		UpdateHUDHealth();
 	}
-	
-	PlayHitReactMontage();
+
+	if (LastHealth > CurHealth)
+	{
+		PlayHitReactMontage();
+	}
 }
 
 //on server
