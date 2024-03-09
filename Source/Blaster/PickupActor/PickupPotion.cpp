@@ -16,31 +16,6 @@ APickupPotion::APickupPotion()
 	PickupEffectComponent->SetupAttachment(RootComponent);
 }
 
-void APickupPotion::Destroyed()
-{
-	if (PickupEffect)
-	{
-		if (PlayerCharacter)
-		{
-			PickupEffectComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
-				PickupEffect,
-				PlayerCharacter->GetMesh(),
-				FName(),
-				PlayerCharacter->GetActorLocation(), GetActorRotation(),
-				EAttachLocation::KeepWorldPosition,
-				true
-			);
-		}
-		
-		if (PickupEffectComponent)
-		{
-			PickupEffectComponent->SetColorParameter(FName("UserColor"), EffectColor);
-		}
-	}
-
-	Super::Destroyed();
-}
-
 void APickupPotion::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
@@ -57,10 +32,56 @@ void APickupPotion::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponen
 		case  EPotionType::EPT_Speed:
 			PlayerCharacter->GetBuffComponent()->BuffOfSpeed(PotionAmount, BuffOfPotion, BuffTime);
 			break;
+		case EPotionType::EPT_Shield:
+			PlayerCharacter->GetBuffComponent()->BuffOfShield(PotionAmount, BuffOfPotion);
+			break;
 		default:
 			break;
 		}
+
+		SetOwner(PlayerCharacter);
 	}
+
+	PlayPickupEffect();
 	
 	Destroy();
+}
+
+void APickupPotion::OnRep_Owner()
+{
+	Super::OnRep_Owner();
+
+	PlayPickupEffect();
+
+	UE_LOG(LogTemp, Warning, TEXT("OnRep_Owner is vaild"));
+}
+
+void APickupPotion::PlayPickupEffect()
+{
+	if (PickupEffect)
+	{
+		if (!HasAuthority())
+		{
+			PlayerCharacter = Cast<ABlasterCharacter>(GetOwner());
+		}
+		
+		UE_LOG(LogTemp, Warning, TEXT("PickupEffect is vaild"));
+		if (PlayerCharacter)
+		{
+			PickupEffectComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
+				PickupEffect,
+				PlayerCharacter->GetMesh(),
+				FName(),
+				PlayerCharacter->GetActorLocation(), GetActorRotation(),
+				EAttachLocation::KeepWorldPosition,
+				true
+			);
+			UE_LOG(LogTemp, Warning, TEXT("hhh"));
+		}
+		
+		if (PickupEffectComponent)
+		{
+			PickupEffectComponent->SetColorParameter(FName("UserColor"), EffectColor);
+		}
+	}
 }

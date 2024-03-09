@@ -22,6 +22,7 @@ public:
 
 	
 	void SetHudHealth(float CurHealth, float MaxHealth);
+	void SetHudShield(float CurShield, float MaxShield);
 	void SetHudScore(float Score);
 	void SetHUDDefeats(int32 Defeats);
 	void SetHUDWeaponAmmo(int32 Ammo);

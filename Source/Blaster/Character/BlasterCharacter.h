@@ -129,6 +129,17 @@ private:
 	class ADCPlayerController* DCPlayerController;
 
 	/*
+	 * Player Shield
+	 */
+	UPROPERTY(EditAnywhere, Replicated, Category = "Player Stats")
+	float MaxShield = 0.f;
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_Shield, Category = "Player Stats")
+	float CurShield = 0.f;
+
+	UFUNCTION()
+	void OnRep_Shield(float LastShield);
+
+	/*
 	 * 血量归零时淘汰
 	*/
 	UPROPERTY(EditAnywhere, Category = CombatComponent)
@@ -216,6 +227,17 @@ public:
 	FORCEINLINE void SetMaxHealth(float Health) { MaxHealth = Health; }
 	
 	void UpdateHUDHealth();
+
+	/*
+	 * Player Shield
+	 */
+
+	void UpdateHUDShield();
+
+	FORCEINLINE float GetCurShield() const{ return CurShield; }
+	FORCEINLINE void SetCurShield(float Shield) { CurShield = Shield; }
+	FORCEINLINE float GetMaxShield() const{ return MaxShield; }
+	FORCEINLINE void SetMaxShield(float Shield) { MaxShield = Shield; }
 
 	/*
 	 * Reload

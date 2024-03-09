@@ -28,6 +28,8 @@ public:
 
 	void BuffOfSpeed(float WalkSpeed, float CrouchSpeed, float BuffTime);
 
+	void BuffOfShield(float NumOfShield, float MaxShield);
+
 private:
 	FTimerHandle SpeedBuffTimerHandle;
 

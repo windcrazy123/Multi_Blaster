@@ -47,7 +47,6 @@ void UBuffComponent::BuffOfHealth(float NumOfHealth, float IncreasedMaxHealth)
         	PlayerCharacter->UpdateHUDHealth();
         }
 	}
-	
 }
 
 void UBuffComponent::BuffOfSpeed(float NewWalkSpeed, float NewCrouchSpeed, float BuffTime)
@@ -77,5 +76,27 @@ void UBuffComponent::MultiChangeSpeed_Implementation(float WalkSpeed, float Crou
 	}
 }
 
-
+void UBuffComponent::BuffOfShield(float NumOfShield, float MaxShield)
+{
+	if (PlayerCharacter)
+	{
+		PlayerCharacter->SetMaxShield(
+			FMath::Clamp(
+				MaxShield,
+				PlayerCharacter->GetMaxShield(), 500.f
+			)
+		);
+		PlayerCharacter->SetCurShield(
+			FMath::Clamp(
+				PlayerCharacter->GetCurShield()+NumOfShield,
+				PlayerCharacter->GetCurShield(), PlayerCharacter->GetMaxShield()
+			)
+		);
+		
+		if (PlayerCharacter->IsLocallyControlled())
+		{
+			PlayerCharacter->UpdateHUDShield();
+		}
+	}
+}
 

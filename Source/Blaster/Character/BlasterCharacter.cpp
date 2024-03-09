@@ -74,6 +74,8 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	
 	DOREPLIFETIME(ABlasterCharacter, CurHealth);
 	DOREPLIFETIME(ABlasterCharacter, MaxHealth);
+	DOREPLIFETIME(ABlasterCharacter, CurShield);
+	DOREPLIFETIME(ABlasterCharacter, MaxShield);
 }
 
 void ABlasterCharacter::PostInitializeComponents()
@@ -110,6 +112,7 @@ void ABlasterCharacter::BeginPlay()
 	//依旧需要在BeginPlay中调用这个，因为尽管在Controller中的OnPossess添加了SetHudHealth，
 	//但是在游戏开始和OnPossess时并不是所有东西都初始化好了，可能DCHud已经初始化而DCHud->CharacterOverlay还没有
 	UpdateHUDHealth();
+	UpdateHUDShield();
 
 	if (HasAuthority())
 	{
@@ -493,14 +496,43 @@ void ABlasterCharacter::OnRep_Health(float LastHealth)
 	}
 }
 
+void ABlasterCharacter::OnRep_Shield(float LastShield)
+{
+	if(IsLocallyControlled())
+	{
+		UpdateHUDShield();
+	}
+}
+
 //on server
 void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType,
 	AController* InstigatedBy, AActor* DamageCauser)
 {
 	if(bElimmed) return;
-	CurHealth = FMath::Clamp(CurHealth - Damage, 0.f, MaxHealth);
-	UpdateHUDHealth();
-	PlayHitReactMontage();
+
+	if (CurShield > 0.f)
+	{
+		if (CurShield >= Damage)
+		{
+			CurShield = FMath::Clamp(CurShield - Damage, 0.f, MaxShield);
+			UpdateHUDShield();
+			//护盾抵挡伤害特效
+		}
+		else
+		{
+			CurHealth = FMath::Clamp(CurHealth+CurShield-Damage, 0.f, MaxHealth);
+			CurShield = 0.f;
+			UpdateHUDShield();
+			UpdateHUDHealth();
+			PlayHitReactMontage();
+			//护盾破碎特效
+		}
+	}
+	else//没有护盾能量
+	{
+		CurHealth = FMath::Clamp(CurHealth - Damage, 0.f, MaxHealth);
+		UpdateHUDHealth();
+	}
 
 	/*
 	 * 血量归零时淘汰
@@ -525,6 +557,15 @@ void ABlasterCharacter::UpdateHUDHealth()
 	if (DCPlayerController)
 	{
 		DCPlayerController->SetHudHealth(CurHealth, MaxHealth);
+	}
+}
+
+void ABlasterCharacter::UpdateHUDShield()
+{
+	if(DCPlayerController == nullptr) DCPlayerController = Cast<ADCPlayerController>(Controller);
+	if (DCPlayerController)
+	{
+		DCPlayerController->SetHudShield(CurShield, MaxShield);
 	}
 }
 

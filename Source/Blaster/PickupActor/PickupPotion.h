@@ -11,6 +11,7 @@ enum class EPotionType : uint8
 {
 	EPT_Health UMETA(DisplayName = "Health Potion"),
 	EPT_Speed UMETA(DisplayName = "Speed Potion"),
+	EPT_Shield UMETA(DisplayName = "Shield Potion"),
 
 	EPT_MAX UMETA(DisplayName = "DefaultMAX")
 };
@@ -24,10 +25,13 @@ class BLASTER_API APickupPotion : public APickupMaster
 	GENERATED_BODY()
 public:
 	APickupPotion();
-	virtual void Destroyed() override;
+	//virtual void Destroyed() override;
+	
 protected:
 	virtual void OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
+
+	virtual void OnRep_Owner() override;
 
 private:
 	UPROPERTY(EditAnywhere, Category = "PotionProperties")
@@ -42,7 +46,7 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "PotionProperties")
 	float PotionAmount;
-	//药水额外技能，比如血瓶增加的血上限数量，速度的蹲下行走速度
+	//药水额外技能，比如血瓶增加的血上限数量，速度的蹲下行走速度, 护盾的最大能量
 	UPROPERTY(EditAnywhere, Category = "PotionProperties")
 	float BuffOfPotion;
 
@@ -52,4 +56,6 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	EPotionType PotionType;
+
+	void PlayPickupEffect();
 };

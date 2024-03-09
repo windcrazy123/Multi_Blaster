@@ -100,6 +100,19 @@ void ADCPlayerController::SetHudHealth(float CurHealth, float MaxHealth)
 	// }
 }
 
+void ADCPlayerController::SetHudShield(float CurShield, float MaxShield)
+{
+	if(DCHud == nullptr) DCHud = Cast<ADCHUD>(GetHUD());
+
+	if(DCHud && DCHud->CharacterOverlay && DCHud->CharacterOverlay->ShieldBar && DCHud->CharacterOverlay->ShieldText)
+	{
+		DCHud->CharacterOverlay->ShieldBar->SetPercent(CurShield/MaxShield);
+
+		FString ShieldText = FString::Printf(TEXT("%d/%d"), FMath::CeilToInt(CurShield), FMath::CeilToInt(MaxShield));
+		DCHud->CharacterOverlay->ShieldText->SetText(FText::FromString(ShieldText));
+	}
+}
+
 void ADCPlayerController::SetHudScore(float Score)
 {
 	if(DCHud == nullptr) DCHud = Cast<ADCHUD>(GetHUD());
