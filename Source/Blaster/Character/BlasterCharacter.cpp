@@ -293,6 +293,10 @@ void ABlasterCharacter::HideCameraIfCharacterClose()
 		{
 			CombatComponent->EquippedWeapon->GetWeaponMesh()->SetOwnerNoSee(true);
 		}
+		if (CombatComponent && CombatComponent->SecondaryWeapon && CombatComponent->SecondaryWeapon->GetWeaponMesh())
+		{
+			CombatComponent->SecondaryWeapon->GetWeaponMesh()->SetOwnerNoSee(true);
+		}
 	}
 	else
 	{
@@ -300,6 +304,10 @@ void ABlasterCharacter::HideCameraIfCharacterClose()
 		if (CombatComponent && CombatComponent->EquippedWeapon && CombatComponent->EquippedWeapon->GetWeaponMesh())
 		{
 			CombatComponent->EquippedWeapon->GetWeaponMesh()->SetOwnerNoSee(false);
+		}
+		if (CombatComponent && CombatComponent->SecondaryWeapon && CombatComponent->SecondaryWeapon->GetWeaponMesh())
+		{
+			CombatComponent->SecondaryWeapon->GetWeaponMesh()->SetOwnerNoSee(false);
 		}
 	}
 }
@@ -317,6 +325,7 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAction("Fire",IE_Pressed,this,&ABlasterCharacter::FireButtonPressed);
 	PlayerInputComponent->BindAction("Fire",IE_Released,this,&ABlasterCharacter::FireButtonReleased);
 	PlayerInputComponent->BindAction("Reload",IE_Released,this,&ABlasterCharacter::ReloadButtonPressed);
+	PlayerInputComponent->BindAction("NextWeapon",IE_Pressed,this,&ABlasterCharacter::NextWeaponWheelAction);
 	
 	PlayerInputComponent->BindAxis("MoveForward",this,&ABlasterCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight",this,&ABlasterCharacter::MoveRight);
@@ -435,6 +444,14 @@ void ABlasterCharacter::ReloadButtonPressed()
 	if (CombatComponent)
 	{
 		CombatComponent->Reload();
+	}
+}
+
+void ABlasterCharacter::NextWeaponWheelAction()
+{
+	if (CombatComponent)
+	{
+		CombatComponent->NextWeapon();
 	}
 }
 

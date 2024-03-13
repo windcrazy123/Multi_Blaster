@@ -38,6 +38,8 @@ public:
 	 */
 
 	void SetFireButtonPressed(bool bIsCanFire);
+
+	void NextWeapon();
 protected:
 	virtual void BeginPlay() override;
 
@@ -47,6 +49,9 @@ protected:
 
 	UFUNCTION()
 	void OnRep_EquippedWeapon();
+
+	UFUNCTION()
+	void OnRep_SecondaryWeapon();
 
 	void FireButtonPressed(bool bPressed);
 	UFUNCTION(Server, Reliable)
@@ -67,6 +72,15 @@ protected:
 
 	//返回从背包取出对应类型子弹装载到武器弹夹中的子弹数量
 	int32 ReloadAmmoAmount();
+
+	/*
+	 * Next Weapon
+	 */
+
+	UFUNCTION(Server, Reliable)
+	void ServerNextWeapon();
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastNextWeapon();
 private:
 	void Fire();
 
@@ -79,6 +93,11 @@ private:
 
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	AWeapon* EquippedWeapon;
+
+	UPROPERTY(ReplicatedUsing = OnRep_SecondaryWeapon)
+	AWeapon* SecondaryWeapon;
+
+	void EquipSecondaryWeapon(AWeapon* WeaponToEquip);
 
 	UPROPERTY(Replicated)
 	bool bAiming;

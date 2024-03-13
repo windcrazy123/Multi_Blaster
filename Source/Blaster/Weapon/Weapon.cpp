@@ -111,6 +111,16 @@ void AWeapon::SetWeaponState(EWeaponState State)
 		WeaponMesh->SetEnableGravity(false);
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		break;
+	case EWeaponState::EWS_InBag:
+		ShowPickupWidget(false);
+		if (HasAuthority())
+		{
+			AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		}
+		WeaponMesh->SetSimulatePhysics(false);
+		WeaponMesh->SetEnableGravity(false);
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		break;
 	case EWeaponState::EWS_Dropped:
 		if (HasAuthority())
 		{
@@ -139,6 +149,12 @@ void AWeapon::OnRep_WeaponState()
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		WeaponMesh->SetSimulatePhysics(true);
 		WeaponMesh->SetEnableGravity(true);
+		break;
+	case EWeaponState::EWS_InBag:
+		ShowPickupWidget(false);
+		WeaponMesh->SetSimulatePhysics(false);
+		WeaponMesh->SetEnableGravity(false);
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		break;
 	default:
 		break;
@@ -221,6 +237,8 @@ void AWeapon::OnRep_Ammo()
 
 void AWeapon::SetHUDAmmo()
 {
+	if(WeaponState != EWeaponState::EWS_Equipped) return;
+	
 	if(OwnerCharacter == nullptr) OwnerCharacter = Cast<ABlasterCharacter>(GetOwner());
 	if (OwnerCharacter)
 	{

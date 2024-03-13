@@ -16,6 +16,7 @@ enum class EWeaponState : uint8
 	EWS_Initial UMETA(DisplayName = "Initial"),
 	EWS_Equipped UMETA(DisplayName = "Equipped"),
 	EWS_Dropped UMETA(DisplayName = "Dropped"),
+	EWS_InBag UMETA(DisplayName = "InBag"),
 
 	//we can check the numerical to know how many constants are in this enum
 	EWS_MAX UMETA(DisplayName = "DefaultMAX")

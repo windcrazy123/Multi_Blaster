@@ -45,6 +45,7 @@ protected:
 	void FireButtonPressed();
 	void FireButtonReleased();
 	void ReloadButtonPressed();
+	void NextWeaponWheelAction();
 	
 	void PlayHitReactMontage();
 	void SimProxiesTurn();

@@ -31,6 +31,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
+	DOREPLIFETIME(UCombatComponent, SecondaryWeapon);
 	DOREPLIFETIME(UCombatComponent, bAiming);
 	DOREPLIFETIME_CONDITION(UCombatComponent, CarriedAmmo, COND_OwnerOnly);
 	DOREPLIFETIME(UCombatComponent, CombatState);
@@ -312,43 +313,64 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 {
 	if (Character == nullptr || WeaponToEquip == nullptr)
 		return;
-	if (EquippedWeapon)
-	{
-		EquippedWeapon->Drop();
-	}
-	EquippedWeapon = WeaponToEquip;
-
+	
 	//EquipSound
-	if (EquippedWeapon->EquipSound)
+	if (WeaponToEquip->EquipSound)
 	{
 		UGameplayStatics::PlaySoundAtLocation(this,
-			EquippedWeapon->EquipSound, EquippedWeapon->GetActorLocation());
+			WeaponToEquip->EquipSound, WeaponToEquip->GetActorLocation());
 	}
 	
-	/*网络和attachactor不一定
-	 * 设置武器状态和附着Actor会传播到客户端，但是不能保证是哪一个先到达客户端，为了避免这种假设，可以在OnRep_EquippedWeapon中AttachActor以直接在客户端调用
-	 * 但是，SetWeaponState中会处理武器模拟物理的状态，如果在模拟物理时，是没有办法捡起武器的
-	 * 所以SetWeaponState和AttachActor这两种函数都要放在OnRep_EquippedWeapon中
-	 */
-	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
-	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
-	if (HandSocket)
+	if(EquippedWeapon == nullptr || (EquippedWeapon && SecondaryWeapon))
 	{
-		HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
+		if(EquippedWeapon)
+		{
+			EquippedWeapon->Drop();
+		}
+		
+		EquippedWeapon = WeaponToEquip;
+	
+		/*网络和attachactor不一定
+		 * 设置武器状态和附着Actor会传播到客户端，但是不能保证是哪一个先到达客户端，为了避免这种假设，可以在OnRep_EquippedWeapon中AttachActor以直接在客户端调用
+		 * 但是，SetWeaponState中会处理武器模拟物理的状态，如果在模拟物理时，是没有办法捡起武器的
+		 * 所以SetWeaponState和AttachActor这两种函数都要放在OnRep_EquippedWeapon中
+		 */
+		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+		const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
+		if (HandSocket)
+		{
+			HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
+		}
+	
+		/* Actor.h
+		 *UPROPERTY(ReplicatedUsing=OnRep_Owner)
+		AActor* Owner;*/
+		EquippedWeapon->SetOwner(Character);
+		//Server SetOwner then SetHUDAmmo, use OnRep_Owner on weapon call SetHUDAmmo on all client
+		EquippedWeapon->SetHUDAmmo();
+
+		//CarriedAmmo
+		UpdateCarriedAmmo();
+	
+		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
+		Character->bUseControllerRotationYaw = true;
+	} else
+	{
+		EquipSecondaryWeapon(WeaponToEquip);
+	}
+}
+void UCombatComponent::EquipSecondaryWeapon(AWeapon* WeaponToEquip)
+{
+	SecondaryWeapon = WeaponToEquip;
+
+	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_InBag);
+	const USkeletalMeshSocket* BagSocket = Character->GetMesh()->GetSocketByName(FName("BagSocket"));
+	if (BagSocket)
+	{
+		BagSocket->AttachActor(SecondaryWeapon, Character->GetMesh());
 	}
 	
-	/* Actor.h
-	 *UPROPERTY(ReplicatedUsing=OnRep_Owner)
-	AActor* Owner;*/
-	EquippedWeapon->SetOwner(Character);
-	//Server SetOwner then SetHUDAmmo, use OnRep_Owner on weapon call SetHUDAmmo on all client
-	EquippedWeapon->SetHUDAmmo();
-
-	//CarriedAmmo
-	UpdateCarriedAmmo();
-	
-	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
-	Character->bUseControllerRotationYaw = true;
+	SecondaryWeapon->SetOwner(Character);
 }
 void UCombatComponent::OnRep_EquippedWeapon()
 {
@@ -371,6 +393,25 @@ void UCombatComponent::OnRep_EquippedWeapon()
 		
 		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 		Character->bUseControllerRotationYaw = true;
+	}
+}
+void UCombatComponent::OnRep_SecondaryWeapon()
+{
+	if (SecondaryWeapon && Character)
+	{
+		//EquipSound
+		if (SecondaryWeapon->EquipSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(this,
+				SecondaryWeapon->EquipSound, SecondaryWeapon->GetActorLocation());
+		}
+		
+		SecondaryWeapon->SetWeaponState(EWeaponState::EWS_InBag);
+		const USkeletalMeshSocket* BagSocket = Character->GetMesh()->GetSocketByName(FName("BagSocket"));
+		if (BagSocket)
+		{
+			BagSocket->AttachActor(SecondaryWeapon, Character->GetMesh());
+		}
 	}
 }
 
@@ -553,5 +594,23 @@ void UCombatComponent::UpdateCarriedAmmo()
 	if (Controller)
 	{
 		Controller->SetHUDCarriedAmmo(CarriedAmmo);
+	}
+}
+
+void UCombatComponent::NextWeapon()
+{
+	ServerNextWeapon();
+}
+void UCombatComponent::ServerNextWeapon_Implementation()
+{
+	MulticastNextWeapon();
+}
+void UCombatComponent::MulticastNextWeapon_Implementation()
+{
+	if (SecondaryWeapon != nullptr)
+	{
+		AWeapon* TempWeapon = EquippedWeapon;
+		EquipWeapon(SecondaryWeapon);
+		EquipSecondaryWeapon(TempWeapon);
 	}
 }
