@@ -15,7 +15,7 @@ class BLASTER_API APickupMaster : public AActor
 public:
 	APickupMaster();
 	virtual void Tick(float DeltaTime) override;
-	virtual void Destroyed() override;
+	//virtual void Destroyed() override;
 
 protected:
 	virtual void BeginPlay() override;
@@ -30,6 +30,9 @@ protected:
 		const FHitResult& SweepResult
 	);
 
+	void PlayPickupSound();
+
+	FORCEINLINE UStaticMeshComponent* GetMesh() const { return PickupMesh; }
 private:
 	UPROPERTY(VisibleAnywhere)
 	class USphereComponent* OverlapSphereComponent;

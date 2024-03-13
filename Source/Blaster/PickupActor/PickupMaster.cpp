@@ -29,11 +29,8 @@ APickupMaster::APickupMaster()
 void APickupMaster::BeginPlay()
 {
 	Super::BeginPlay();
-
-	if (HasAuthority())
-	{
-		OverlapSphereComponent->OnComponentBeginOverlap.AddDynamic(this, &APickupMaster::OnSphereBeginOverlap);
-	}
+	
+	OverlapSphereComponent->OnComponentBeginOverlap.AddDynamic(this, &APickupMaster::OnSphereBeginOverlap);
 }
 
 void APickupMaster::Tick(float DeltaTime)
@@ -48,10 +45,22 @@ void APickupMaster::Tick(float DeltaTime)
 	}
 }
 
-void APickupMaster::Destroyed()
+// void APickupMaster::Destroyed()
+// {
+// 	Super::Destroyed();
+//
+// 	
+// }
+
+//all client
+void APickupMaster::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	Super::Destroyed();
-	
+	PlayPickupSound();
+}
+
+void APickupMaster::PlayPickupSound()
+{
 	if (PickupSound)
 	{
 		UGameplayStatics::PlaySoundAtLocation(
@@ -60,11 +69,5 @@ void APickupMaster::Destroyed()
 			GetActorLocation()
 		);
 	}
-}
-
-void APickupMaster::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	
 }
 

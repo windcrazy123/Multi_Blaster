@@ -16,13 +16,14 @@ APickupPotion::APickupPotion()
 	PickupEffectComponent->SetupAttachment(RootComponent);
 }
 
+//all client
 void APickupPotion::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	Super::OnSphereBeginOverlap(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
 
 	PlayerCharacter = Cast<ABlasterCharacter>(OtherActor);
-	if (PlayerCharacter)
+	if (PlayerCharacter && HasAuthority())
 	{
 		switch (PotionType)
 		{
@@ -38,34 +39,26 @@ void APickupPotion::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponen
 		default:
 			break;
 		}
-
-		SetOwner(PlayerCharacter);
 	}
 
 	PlayPickupEffect();
+	if(GetMesh())
+		GetMesh()->SetVisibility(false);
 	
-	Destroy();
+	if(HasAuthority())
+		Destroy();
 }
 
-void APickupPotion::OnRep_Owner()
-{
-	Super::OnRep_Owner();
-
-	PlayPickupEffect();
-
-	UE_LOG(LogTemp, Warning, TEXT("OnRep_Owner is vaild"));
-}
-
+/*
+* 原来是Destroy();后使用Destroyed()传播PlayPickupEffect();但由于SpawnSystemAttached中PlayerCharacter获取不到，后改为
+* Server：PlayPickupEffect();SetOwner(PlayerCharacter);Destroy();  OnRep_Owner：PlayPickupEffect();
+* 但是可能由于Destroy()被标记PendingKill而导致OnRep_Owner没有触发（注：AActor::SetOwner），因此需要改变最初逻辑，所有客户端都可以overlap
+* 但是需要将视觉效果和逻辑分主机和客户端，因此对OnSphereBeginOverlap从if (PlayerCharacter)改为if (PlayerCharacter && HasAuthority())
+ */
 void APickupPotion::PlayPickupEffect()
 {
 	if (PickupEffect)
 	{
-		if (!HasAuthority())
-		{
-			PlayerCharacter = Cast<ABlasterCharacter>(GetOwner());
-		}
-		
-		UE_LOG(LogTemp, Warning, TEXT("PickupEffect is vaild"));
 		if (PlayerCharacter)
 		{
 			PickupEffectComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
@@ -76,7 +69,6 @@ void APickupPotion::PlayPickupEffect()
 				EAttachLocation::KeepWorldPosition,
 				true
 			);
-			UE_LOG(LogTemp, Warning, TEXT("hhh"));
 		}
 		
 		if (PickupEffectComponent)
@@ -84,4 +76,6 @@ void APickupPotion::PlayPickupEffect()
 			PickupEffectComponent->SetColorParameter(FName("UserColor"), EffectColor);
 		}
 	}
+
+	
 }
