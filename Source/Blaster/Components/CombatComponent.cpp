@@ -186,7 +186,7 @@ void UCombatComponent::SetAiming(bool bIsAiming)
 }
 void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming)
 {
-	bAiming = bIsAiming;
+	//bAiming = bIsAiming;没必要再同步FOV
 	if (Character)
 	{
 		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
