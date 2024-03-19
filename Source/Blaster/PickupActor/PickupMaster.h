@@ -31,8 +31,6 @@ protected:
 	);
 
 	void PlayPickupSound();
-
-	FORCEINLINE UStaticMeshComponent* GetMesh() const { return PickupMesh; }
 private:
 	UPROPERTY(VisibleAnywhere)
 	class USphereComponent* OverlapSphereComponent;

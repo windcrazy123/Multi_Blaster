@@ -146,12 +146,19 @@ private:
 	 * Ammo
 	 */
 	//弹夹中子弹数
-	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
+	UPROPERTY(EditAnywhere)
 	int32 Ammo;
+
+	UFUNCTION(Client, Reliable)
+	void ClientHUDAmmo(int ServerAmmo);
+	UFUNCTION(Client, Reliable)
+	void ClientAddAmmo(int ServerAmmo);
 	
 	void SpendAmmo();
-	UFUNCTION()
-	void OnRep_Ammo();
+	// UFUNCTION()
+	// void OnRep_Ammo();
+
+	int Sequence = 0;
 
 	//弹夹最大容量
 	UPROPERTY(EditAnywhere)

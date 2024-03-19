@@ -42,8 +42,6 @@ void APickupPotion::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponen
 	}
 
 	PlayPickupEffect();
-	if(GetMesh())
-		GetMesh()->SetVisibility(false);
 	
 	if(HasAuthority())
 		Destroy();

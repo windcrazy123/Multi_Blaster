@@ -220,6 +220,11 @@ void UCombatComponent::Fire()
 	// {
 		if(CanFire())
 		{
+			//本地先行表示视觉效果
+			Character->PlayFireMontage(bAiming);
+
+			LocalFire(HitTarget);
+			
 			bCanFire = false;
 			ServerFire(HitTarget);
 			CrosshairsShootingFactor += 0.7f;
@@ -235,12 +240,19 @@ void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& Trac
 }
 void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
+	if(Character && !Character->IsLocallyControlled())
+	{
+		LocalFire(TraceHitTarget);
+	}
+}
+void UCombatComponent::LocalFire(const FVector_NetQuantize& TraceHitTarget)
+{
 	if(EquippedWeapon == nullptr) return;
-	if (Character /*&& CombatState == ECombatState::ECS_Unoccupied*/)
+	if (Character && CombatState == ECombatState::ECS_Unoccupied)
 	{
 		Character->PlayFireMontage(bAiming);
-		EquippedWeapon->Fire(TraceHitTarget);
 	}
+	EquippedWeapon->Fire(TraceHitTarget);
 }
 void UCombatComponent::StartFireTimer()
 {

@@ -44,13 +44,11 @@ void AWeapon::BeginPlay()
 	Super::BeginPlay();
 
 	//HasAuthority();
-	if (GetLocalRole() == ENetRole::ROLE_Authority)
-	{
-		AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		AreaSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
-		AreaSphere->OnComponentBeginOverlap.AddDynamic(this, &AWeapon::OnSphereBeginOverlap);
-		AreaSphere->OnComponentEndOverlap.AddDynamic(this, &AWeapon::OnSphereEndOverlap);
-	}
+	//if (GetLocalRole() == ENetRole::ROLE_Authority){}
+	AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	AreaSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+	AreaSphere->OnComponentBeginOverlap.AddDynamic(this, &AWeapon::OnSphereBeginOverlap);
+	AreaSphere->OnComponentEndOverlap.AddDynamic(this, &AWeapon::OnSphereEndOverlap);
 }
 
 void AWeapon::Tick(float DeltaTime)
@@ -64,7 +62,7 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AWeapon, WeaponState);
-	DOREPLIFETIME(AWeapon, Ammo);
+	//DOREPLIFETIME(AWeapon, Ammo);
 }
 
 void AWeapon::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -103,29 +101,29 @@ void AWeapon::SetWeaponState(EWeaponState State)
 	{
 	case EWeaponState::EWS_Equipped:
 		ShowPickupWidget(false);
-		if (HasAuthority())
-		{
+		// if (HasAuthority())
+		// {
 			AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		}
+		//}
 		WeaponMesh->SetSimulatePhysics(false);
 		WeaponMesh->SetEnableGravity(false);
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		break;
 	case EWeaponState::EWS_InBag:
 		ShowPickupWidget(false);
-		if (HasAuthority())
-		{
+		//if (HasAuthority())
+		//{
 			AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		}
+		//}
 		WeaponMesh->SetSimulatePhysics(false);
 		WeaponMesh->SetEnableGravity(false);
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		break;
 	case EWeaponState::EWS_Dropped:
-		if (HasAuthority())
-		{
+		//if (HasAuthority())
+		//{
 			AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-		}
+		//}
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		WeaponMesh->SetSimulatePhysics(true);
 		WeaponMesh->SetEnableGravity(true);
@@ -161,7 +159,8 @@ void AWeapon::OnRep_WeaponState()
 	}
 }
 
-// be multicasted HitTarget is trace end point or hit point
+// be multicasted HitTarget is trace end point or hit point;
+// 后改为all client
 void AWeapon::Fire(const FVector& HitTarget)
 {
 	if (FireAnimation)
@@ -169,7 +168,7 @@ void AWeapon::Fire(const FVector& HitTarget)
 		WeaponMesh->PlayAnimation(FireAnimation, false);
 	}
 
-	//这个多播，生成子弹不多播
+	//这个弹壳多播，生成子弹不多播
 	if (BulletShellClass)
 	{
 		const USkeletalMeshSocket* AmmoEjectSocket = WeaponMesh->GetSocketByName(FName("AmmoEject"));
@@ -187,7 +186,10 @@ void AWeapon::Fire(const FVector& HitTarget)
 	}
 
 	//Ammo
-	SpendAmmo();
+	// if (HasAuthority())
+	// {
+		SpendAmmo();
+	// }
 }
 
 void AWeapon::Drop()
@@ -223,9 +225,26 @@ void AWeapon::SpendAmmo()
 	Ammo = FMath::Clamp(Ammo-1, 0, MagCapacity);
 
 	SetHUDAmmo();
-}
 
-void AWeapon::OnRep_Ammo()
+	if (HasAuthority())
+	{
+		ClientHUDAmmo(Ammo);
+	}
+	else
+	{
+		++Sequence;
+	}
+}
+void AWeapon::ClientHUDAmmo_Implementation(int ServerAmmo)
+{
+	if(HasAuthority())return;
+	
+	Ammo = ServerAmmo;
+	--Sequence;
+	Ammo -= Sequence;
+	SetHUDAmmo();
+}
+/*void AWeapon::OnRep_Ammo()
 {
 	if(OwnerCharacter == nullptr) OwnerCharacter = Cast<ABlasterCharacter>(GetOwner());
 	if (OwnerCharacter && IsFull())
@@ -233,7 +252,7 @@ void AWeapon::OnRep_Ammo()
 		OwnerCharacter->JumptoEndSection();
 	}
 	SetHUDAmmo();
-}
+}*/
 
 void AWeapon::SetHUDAmmo()
 {
@@ -253,6 +272,13 @@ void AWeapon::SetHUDAmmo()
 void AWeapon::AddAmmo(int32 AddNum)
 {
 	Ammo = FMath::Clamp(Ammo + AddNum, 0, MagCapacity);
+	SetHUDAmmo();
+	ClientAddAmmo(Ammo);
+}
+void AWeapon::ClientAddAmmo_Implementation(int ServerAmmo)
+{
+	Ammo = ServerAmmo;
+	Ammo = FMath::Clamp(Ammo, 0, MagCapacity);
 	SetHUDAmmo();
 }
 

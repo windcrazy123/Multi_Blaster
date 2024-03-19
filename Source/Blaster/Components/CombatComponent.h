@@ -83,6 +83,7 @@ protected:
 	void MulticastNextWeapon();
 private:
 	void Fire();
+	void LocalFire(const FVector_NetQuantize& TraceHitTarget);
 
 	UPROPERTY()
 	class ABlasterCharacter* Character;

@@ -82,6 +82,8 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 
 void AProjectile::RadialDamage()
 {
+	if(!HasAuthority())return;
+	
 	APawn* FiringPawn = GetInstigator();
 	if (FiringPawn)
 	{
@@ -105,6 +107,8 @@ void AProjectile::RadialDamage()
 
 void AProjectile::PointDamage(AActor* OtherActor)
 {
+	if(!HasAuthority())return;
+	
 	APawn* OwnerCharacter = GetInstigator();
 	if (OwnerCharacter)
 	{

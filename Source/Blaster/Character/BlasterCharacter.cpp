@@ -490,14 +490,14 @@ void ABlasterCharacter::PlayHitReactMontage()
 //rep notify只有一条路，即：服务器到客户端，因此不会给服务器发送通知，也就是说服务器不会被调用到此方法
 void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 {
-	if (OverlappingWeapon)
+	/*if (OverlappingWeapon)
 	{
 		OverlappingWeapon->ShowPickupWidget(true);
 	}
 	if (LastWeapon)
 	{
 		LastWeapon->ShowPickupWidget(false);
-	}
+	}*/
 }
 
 void ABlasterCharacter::OnRep_Health(float LastHealth)

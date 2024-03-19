@@ -57,6 +57,8 @@ void APickupMaster::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponen
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	PlayPickupSound();
+	if(PickupMesh)
+		PickupMesh->SetVisibility(false);
 }
 
 void APickupMaster::PlayPickupSound()
