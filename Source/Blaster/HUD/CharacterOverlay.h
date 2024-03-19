@@ -40,4 +40,7 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* LevelCountdownText;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* HighPingWarning;
 };

@@ -55,10 +55,35 @@ void ADCPlayerController::Tick(float DeltaSeconds)
 		PassedTime = 0.f;
 	}
 
+	CheckPing(DeltaSeconds);
+
 	/*
 	 * MatchState
 	 */
 	//PollInit();
+}
+void ADCPlayerController::CheckPing(float DeltaSeconds)
+{
+	if(HasAuthority()) return;
+	
+	Ping += DeltaSeconds;
+	if (Ping>CheckPingFrequency)
+	{
+		if(PlayerState == nullptr) PlayerState = GetPlayerState<APlayerState>();
+		if (PlayerState)
+		{
+			//literal value of Ping  1/4Ping
+			if (PlayerState->GetPing() * 4 > WarningHighPingThreshold)
+			{
+				StartHighPingWarning();
+			}
+			else
+			{
+				StopHighPingWarning();
+			}
+			Ping = 0.f;
+		}
+	}
 }
 
 void ADCPlayerController::ReceivedPlayer()
@@ -414,5 +439,27 @@ void ADCPlayerController::ClientJoinGoingGame_Implementation(float TimeOfWarmUp,
 	CooldownTime = TimeOfCooldown;
 
 	OnMatchStateSet(MatchState);
+}
+
+void ADCPlayerController::StartHighPingWarning()
+{
+	if(DCHud == nullptr) DCHud = Cast<ADCHUD>(GetHUD());
+
+	if(DCHud && DCHud->CharacterOverlay && DCHud->CharacterOverlay->HighPingWarning &&
+		DCHud->CharacterOverlay->HighPingWarning->GetVisibility() == ESlateVisibility::Hidden)
+	{
+		DCHud->CharacterOverlay->HighPingWarning->SetVisibility(ESlateVisibility::Visible);
+	}
+}
+
+void ADCPlayerController::StopHighPingWarning()
+{
+	if(DCHud == nullptr) DCHud = Cast<ADCHUD>(GetHUD());
+
+	if(DCHud && DCHud->CharacterOverlay && DCHud->CharacterOverlay->HighPingWarning &&
+		DCHud->CharacterOverlay->HighPingWarning->GetVisibility() == ESlateVisibility::Visible)
+	{
+		DCHud->CharacterOverlay->HighPingWarning->SetVisibility(ESlateVisibility::Hidden);
+	}
 }
 

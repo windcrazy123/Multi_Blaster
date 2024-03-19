@@ -113,4 +113,18 @@ private:
 	//如果是主机直接取gamemode中的CountdownTime减少offset，但是已经有GetServerTime可以考虑注销这几行
 	UPROPERTY()
 	class ADCGameMode* DCGameMode;
+
+	/*
+	 * HighPingWarning
+	 */
+	void StartHighPingWarning();
+	void StopHighPingWarning();
+
+	float Ping = 0.f;
+	UPROPERTY(EditAnywhere)
+	float CheckPingFrequency = 5.f;
+	UPROPERTY(EditAnywhere)
+	float WarningHighPingThreshold = 100.f;
+
+	void CheckPing(float DeltaSeconds);
 };
