@@ -14,9 +14,11 @@
 #include "Net/UnrealNetwork.h"
 #include "Blaster/Blaster.h"
 #include "Blaster/Components/BuffComponent.h"
+#include "Blaster/Components/LagCompensationComponent.h"
 #include "Blaster/GameMode/DCGameMode.h"
 #include "Blaster/PlayerController/DCPlayerController.h"
 #include "Blaster/PlayerState/DCPlayerState.h"
+#include "Components/BoxComponent.h"
 
 
 ABlasterCharacter::ABlasterCharacter()
@@ -47,6 +49,8 @@ ABlasterCharacter::ABlasterCharacter()
 	BuffComponent = CreateDefaultSubobject<UBuffComponent>(TEXT("BuffComponent"));
 	BuffComponent->SetIsReplicated(true);
 
+	LagCompensationComponent = CreateDefaultSubobject<ULagCompensationComponent>(TEXT("LagCompensationComponent"));
+
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
@@ -62,6 +66,55 @@ ABlasterCharacter::ABlasterCharacter()
 	GetCharacterMovement()->RotationRate = FRotator(0.f,850.f,0.f);
 
 	DissolveTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("DissolveTimelineComponent"));
+
+	/*
+	 * Server Rewind
+	 */
+	
+	Head = CreateDefaultSubobject<UBoxComponent>(TEXT("Head"));
+	Head->SetupAttachment(GetMesh(), FName("head"));
+	Head->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	HitBoxes.Add(FName("Head"), Head);
+	
+	Body = CreateDefaultSubobject<UBoxComponent>(TEXT("Body"));
+	Body->SetupAttachment(GetMesh(), FName("spine_03"));
+	Body->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	HitBoxes.Add(FName("Body"), Body);
+	
+	LeftArm = CreateDefaultSubobject<UBoxComponent>(TEXT("LeftArm"));
+	LeftArm->SetupAttachment(GetMesh(), FName("upperarm_l_cuff"));
+	LeftArm->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	HitBoxes.Add(FName("LeftArm"), LeftArm);
+
+	RightArm = CreateDefaultSubobject<UBoxComponent>(TEXT("RightArm"));
+	RightArm->SetupAttachment(GetMesh(), FName("upperarm_r_cuff"));
+	RightArm->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	HitBoxes.Add(FName("RightArm"), RightArm);
+
+	LeftLag = CreateDefaultSubobject<UBoxComponent>(TEXT("LeftLag"));
+	LeftLag->SetupAttachment(GetMesh(), FName("foot_l"));
+	LeftLag->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	HitBoxes.Add(FName("LeftLag"), LeftLag);
+
+	RightLag = CreateDefaultSubobject<UBoxComponent>(TEXT("RightLag"));
+	RightLag->SetupAttachment(GetMesh(), FName("foot_r"));
+	RightLag->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	HitBoxes.Add(FName("RightLag"), RightLag);
+
+	LeftHand = CreateDefaultSubobject<UBoxComponent>(TEXT("LeftHand"));
+	LeftHand->SetupAttachment(GetMesh(), FName("lowerarm_twist_01_l"));
+	LeftHand->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	HitBoxes.Add(FName("LeftHand"), LeftHand);
+
+	RightHand = CreateDefaultSubobject<UBoxComponent>(TEXT("RightHand"));
+	RightHand->SetupAttachment(GetMesh(), FName("lowerarm_twist_01_r"));
+	RightHand->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	HitBoxes.Add(FName("RightHand"), RightHand);
+
+	BackPack = CreateDefaultSubobject<UBoxComponent>(TEXT("BackPack"));
+	BackPack->SetupAttachment(GetMesh(), FName("backpack"));
+	BackPack->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	HitBoxes.Add(FName("BackPack"), BackPack);
 }
 
 void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -93,7 +146,14 @@ void ABlasterCharacter::PostInitializeComponents()
 			BuffComponent->InitWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
 			BuffComponent->InitCrouchSpeed = GetCharacterMovement()->MaxWalkSpeedCrouched;
 		}
-		
+	}
+	if (LagCompensationComponent)
+	{
+		LagCompensationComponent->PlayerCharacter = this;
+		if (Controller)
+		{
+			LagCompensationComponent->PlayerController = Cast<ADCPlayerController>(Controller);
+		}
 	}
 }
 

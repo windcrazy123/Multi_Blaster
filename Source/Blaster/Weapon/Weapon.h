@@ -89,6 +89,8 @@ public:
 	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; }
 	//Reload, add ammo to mag
 	void AddAmmo(int32 AddNum);
+
+	FORCEINLINE float GetDamage() const {return Damage; }
 	
 protected:
 	virtual void BeginPlay() override;
@@ -109,6 +111,12 @@ protected:
 		UPrimitiveComponent* OtherComp,
 		int32 OtherBodyIndex
 	);
+
+	UPROPERTY(EditAnywhere)
+	bool bUseServerRewind = true;
+
+	UPROPERTY(EditAnywhere)
+	float Damage = 20.f;
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	USkeletalMeshComponent* WeaponMesh;
@@ -164,11 +172,13 @@ private:
 	UPROPERTY(EditAnywhere)
 	int32 MagCapacity;
 
+protected:
 	UPROPERTY()
 	class ABlasterCharacter* OwnerCharacter;
 	UPROPERTY()
 	class ADCPlayerController* OwnerController;
 
+private:
 	UPROPERTY(EditAnywhere)
 	EWeaponType WeaponType;
 	

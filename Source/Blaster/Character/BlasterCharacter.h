@@ -74,8 +74,11 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly,meta = (AllowPrivateAccess = "true"))
 	class UCombatComponent* CombatComponent;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly,meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere)
 	class UBuffComponent* BuffComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	class ULagCompensationComponent* LagCompensationComponent;
 	
 	//复制    works only when the variable is changed
 	//UPROPERTY(Replicated)
@@ -269,4 +272,33 @@ public:
 	void PickupAmmo(EWeaponType WeaponType, int32 AmmoNum);
 
 	FORCEINLINE UBuffComponent* GetBuffComponent() const { return BuffComponent; }
+
+	/*
+	 * Server Rewind
+	 */
+
+public:
+	TMap<FName, class UBoxComponent*> HitBoxes;
+
+	FORCEINLINE ULagCompensationComponent* GetLagCompensationComp() const { return LagCompensationComponent; }
+
+private:
+	UPROPERTY(VisibleAnywhere)
+	UBoxComponent* Head;
+	UPROPERTY(VisibleAnywhere)
+	UBoxComponent* Body;
+	UPROPERTY(VisibleAnywhere)
+	UBoxComponent* LeftArm;
+	UPROPERTY(VisibleAnywhere)
+	UBoxComponent* RightArm;
+	UPROPERTY(VisibleAnywhere)
+	UBoxComponent* LeftLag;
+	UPROPERTY(VisibleAnywhere)
+	UBoxComponent* RightLag;
+	UPROPERTY(VisibleAnywhere)
+	UBoxComponent* LeftHand;
+	UPROPERTY(VisibleAnywhere)
+	UBoxComponent* RightHand;
+	UPROPERTY(VisibleAnywhere)
+	UBoxComponent* BackPack;
 };

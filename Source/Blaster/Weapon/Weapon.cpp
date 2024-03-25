@@ -160,7 +160,7 @@ void AWeapon::OnRep_WeaponState()
 }
 
 // be multicasted HitTarget is trace end point or hit point;
-// 后改为all client
+// 后改为all client,先local后multicast
 void AWeapon::Fire(const FVector& HitTarget)
 {
 	if (FireAnimation)

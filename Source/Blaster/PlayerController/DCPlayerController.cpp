@@ -291,7 +291,8 @@ void ADCPlayerController::ServerRequestServerTime_Implementation(float ClientTim
 void ADCPlayerController::ClientReceiveServerTime_Implementation(float ClientTime, float ServerTime)
 {
 	float OneRPCTime = GetWorld()->GetTimeSeconds() - ClientTime;
-	float CurServerTime = ServerTime + OneRPCTime*0.5f;
+	SingleTripTime = OneRPCTime * 0.5f;
+	float CurServerTime = ServerTime + SingleTripTime;
 	DeltaTimeOfClientServer = CurServerTime - GetWorld()->GetTimeSeconds();
 }
 float ADCPlayerController::GetServerTime()

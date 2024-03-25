@@ -127,4 +127,9 @@ private:
 	float WarningHighPingThreshold = 100.f;
 
 	void CheckPing(float DeltaSeconds);
+
+public:
+	FORCEINLINE float GetSingleTripTime() const { return SingleTripTime; }
+private:
+	float SingleTripTime = 0.f;
 };

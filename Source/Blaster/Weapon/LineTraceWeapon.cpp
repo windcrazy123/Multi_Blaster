@@ -7,6 +7,8 @@
 #include "NiagaraFunctionLibrary.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Blaster/Character/BlasterCharacter.h"
+#include "Blaster/Components/LagCompensationComponent.h"
+#include "Blaster/PlayerController/DCPlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Sound/SoundCue.h"
@@ -28,10 +30,10 @@ void ALineTraceWeapon::WeaponTraceHit(const FVector& HitTarget)
 	{
 		FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
 		FVector Start = SocketTransform.GetLocation();
-		//FVector End = Start + (HitTarget - Start) * 1.25f;
+		FVector End = Start + (HitTarget - Start) * 1.25f;
 		
 		//LineTraceSingleByChannel
-		SingleLineTrace(Start, HitTarget);
+		SingleLineTrace(Start, End);
 	}
 	
 }
@@ -62,13 +64,31 @@ void ALineTraceWeapon::SingleLineTrace(const FVector& TraceStart, const FVector&
 		//ApplyDamage
 		ABlasterCharacter* DamagedCharacter = Cast<ABlasterCharacter>(FireHit.GetActor());
 		AController* InstigatorController = OwnerPawn->GetController();
-		if (DamagedCharacter && HasAuthority() && InstigatorController)
+		if (DamagedCharacter && InstigatorController)
 		{
-			UGameplayStatics::ApplyDamage(
-			   DamagedCharacter, Damage,
-			   InstigatorController, this,
-			   UDamageType::StaticClass()
-			);
+			//on server
+			if (HasAuthority() && (!bUseServerRewind || OwnerPawn->IsLocallyControlled()))
+			{
+				UGameplayStatics::ApplyDamage(
+                   DamagedCharacter, Damage,
+                   InstigatorController, this,
+                   UDamageType::StaticClass()
+                );
+			}
+			if (!HasAuthority() && bUseServerRewind)
+			{
+				if(OwnerCharacter == nullptr) OwnerCharacter = Cast<ABlasterCharacter>(OwnerPawn);
+				if(OwnerController == nullptr) OwnerController = Cast<ADCPlayerController>(InstigatorController);
+				if (OwnerCharacter && OwnerController && OwnerCharacter->GetLagCompensationComp())
+				{
+					OwnerCharacter->GetLagCompensationComp()->ServerRewindApplyDamage(
+						DamagedCharacter,
+						TraceStart, HitTarget,
+						OwnerController->GetServerTime() - OwnerController->GetSingleTripTime()
+					);
+				}
+			}
+			
 		}
      
 		//multi Effect

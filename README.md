@@ -7,7 +7,7 @@
 
 # 网络概述
 
-![](.\ReadMeImg\GameFramework.png)
+![](ReadMeImg/GameFramework.png)
 
 遇到问题：UE版本5.2.1，character movement组件的Character Movement(Networking)中Network Smoothing Mode为Linear或Exponential时调用蓝图函数Set Capsule Half Height 会使得Mesh相对于根节点的位置重置
 
@@ -168,7 +168,7 @@ Simulate客户端收到的移动数据，相比移动刚发生时，理论上位
 
 加入预测后，Simulate客户端上角色移动落后就只有一个RTT了。
 
-![img](.\ReadMeImg\Simulate客户端预测.png)
+![img](ReadMeImg/Simulate客户端预测.png)
 
 **一个实现细节：关于FVector_NetQuantize**
 
@@ -221,7 +221,7 @@ bool SerializePackedVector(FVector &Vector, FArchive& Ar)
 
 依次向数据流写入10和(2038, 2099, 3048)，此时数据流为：
 
-![img](.\ReadMeImg\数据流.png)
+![img](ReadMeImg/数据流.png)
 
 总共使用了41位，原始的三个float需要128位，仅为其32%大小。留意10和2038的第一位0填充。
 
@@ -274,7 +274,7 @@ playerstate的网络更新较慢，Health变量放在这里不合适，放在Cha
 
 默认情况下，UE 会拉起系统最大线程数量的编译进程。就比如我电脑是16个
 
-![](.\ReadMeImg\16processes.png)
+![](ReadMeImg/16processes.png)
 
 UE 里每个编译任务的 `/zm` 值为 1000：[VCToolChain.cs?q=%2Fzm#L354](https://cs.github.com/EpicGames/UnrealEngine/blob/d11782b9046e9d0b130309591e4efc57f4b8b037/Engine/Source/Programs/UnrealBuildTool/Platform/Windows/VCToolChain.cs?q=/zm#L354)
 表示每个 cl 进程会分配 750M 的虚拟内存：[/Zm (Specify precompiled header memory allocation limit)](https://docs.microsoft.com/en-us/cpp/build/reference/zm-specify-precompiled-header-memory-allocation-limit?view=msvc-160)
@@ -428,7 +428,7 @@ namespace MatchState
 }
 ```
 
-![](.\ReadMeImg\WaitingToStart.png)
+![](ReadMeImg/WaitingToStart.png)
 [^图1]: MatchState：WaitingToStart
 
 
@@ -496,5 +496,261 @@ void AGameMode::StartMatch()
 
 [Using Niagara in C++](https://dev.epicgames.com/community/learning/tutorials/Gx5j/using-niagara-in-c?locale=zh-cn)
 
-# Client-Side Prediction
+# Client Prediction
+
+微软代表作HALO（光环）,在GDC 2011的《I Shot You First》分享中提到了类似的问题，并以扔手雷为例作了详细分细,我们取PPT其中两页。[原GDC的链接,大约在26分位置](https://www.gdcvault.com/play/1014345/I-Shot-You-First-Networking)
+
+![](ReadMeImg/GDC扔手雷1.png)
+
+![](ReadMeImg/GDC扔手雷2.png)
+
+那么在我们的游戏中也有同样的情况和需求，比如Fire时的开火动画，拾取道具时的特效等。拿Fire举例子：我们最开始是和`attempt#1`一样正常的使用帧同步，但是如果延迟过高，会有明显的卡顿，那么就需要将一点权限放给客户端，那么我们就如`actual`一样将本地的视觉效果放权给客户端，而战斗逻辑和其他客户端的视觉效果的权限仍然在服务器，这样至少优化了延迟过高的玩家的游玩体验。
+
+但是这样做同时会带来另一个问题，比如：HUD上显示的弹夹中的剩余子弹数量。设想一下这样的场景：本地连开两枪，本地HUD显示子弹数立马从10跳到8，然而第一枪的数据才从服务器发过来，发现错误而进行纠正，然后第二枪的数据又发过来了，那么就会看到本地HUD显示子弹数又从8跳到9又跳到8，针对此问题可以在本地添加序列号进行验证，例如序列号1是第一枪，2是第二枪，在服务器的第一枪数据传回来时和序列号进行运算来匹配正确的序列。
+
+>参考：[UE4的GAS探究三：弱网延迟与预测Prediction](https://zhuanlan.zhihu.com/p/458192589)
+
+# Server Rewind
+
+> 参考：[SnapNet](https://www.snapnet.dev/docs/unreal-engine-sdk/manual/server-rewind/)
+
+当对Remote角色Fire时，您正在查看并平滑地插值它们过去的位置。同时，假设您的本地控制角色已被预测，您将在服务器之前处理您的输入，并预测当服务器最终执行相同操作时您的角色将在哪里。因此，当您在本地执行操作时，您可以确定，当该操作到达服务器时，远程玩家将继续前进并处于与您最初看到的状态不同的状态。当您希望服务器根据玩家当时看到的内容而不是当前所有内容采取行动时，这可能会带来挑战。一个常见的例子是第一人称射击游戏，您想要确定当玩家开枪时十字准线中排列着谁，而不是当玩家的输入到达服务器时他们的十字准线中可能有谁。
+
+## 解决办法
+
+执行服务器回滚：整个模拟将精确地回退到客户端在其计算机上执行输入时的位置。但是我们不能直接将人物移动过去进行判断后再移动回来，这样会使玩家发生抖动，也不能直接将玩家的物理资产复制移动，这样不仅数据量庞大而且运行时间也长，大大增加服务器成本，那么可以简化物理资产，创建几个简单的Box大致包裹玩家，存储Box的信息即可
+
+```c++
+USTRUCT(BlueprintType)
+struct FBoxInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FVector Location;
+	UPROPERTY()
+	FRotator Rotation;
+	UPROPERTY()
+	FVector BoxExtent;
+};
+```
+
+当然同一帧下同一个玩家有多个Box，并且还要存储时间戳，那么需要另一个结构体
+
+```c++
+USTRUCT(BlueprintType)
+struct FFramePackage
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	float Time;
+
+	UPROPERTY()
+	TMap<FName, FBoxInfo> HitBoxInfos;
+};
+```
+
+那么接下来就需要一个将时间戳排序的并将老的时间戳数据丢弃将新的时间戳插入，且可以进行访问其中数据的数据结构，有三种方案(当然不止三种)TQueue，TArray与TMap结合，TDoubleLinkedList，最后我选择了最后一个，那么接下来就是插入，在Tick中执行，保持`最近时间(MaxHistoryLength)`的一系列数据
+
+```c++
+//===========in Tick function
+if(PlayerCharacter == nullptr) PlayerCharacter = Cast<AMyCharacter>(GetOwner());
+if (PlayerCharacter == nullptr) return;
+if(!PlayerCharacter->HasAuthority())return;
+
+FFramePackage Package;
+SaveFramePackage(Package);
+FrameHistory.AddHead(Package);
+
+float HistoryLength = FrameHistory.GetHead()->GetValue().Time - FrameHistory.GetTail()->GetValue().Time;
+while (HistoryLength > MaxHistoryLength)
+{
+    FrameHistory.RemoveNode(FrameHistory.GetTail());
+    HistoryLength = FrameHistory.GetHead()->GetValue().Time - FrameHistory.GetTail()->GetValue().Time;
+}
+//============
+void SaveFramePackage(FFramePackage& Package)
+{
+	if(PlayerCharacter == nullptr) PlayerCharacter = Cast<AMyCharacter>(GetOwner());
+	if (PlayerCharacter)
+	{
+		Package.Time = GetWorld()->GetTimeSeconds();
+		for(auto& HitBox : PlayerCharacter->HitBoxes)
+		{
+			FBoxInfo BoxInfo;
+			BoxInfo.Location = HitBox.Value->GetComponentLocation();
+			BoxInfo.Rotation = HitBox.Value->GetComponentRotation();
+			BoxInfo.BoxExtent = HitBox.Value->GetScaledBoxExtent();
+			Package.HitBoxInfos.Add(HitBox.Key, BoxInfo);
+		}
+	}
+}
+```
+
+那么到此，值存下来了，但是怎么用呢。首先我们保存了时间戳，那么我们Fire时就可以传一个时间过来，这个时间是服务器的时间还要算上客户端传递信息到服务器的时间，那么我们就可以根据这个时间来查找最近两个数据包，然后进行插值，得到开枪时被射击玩家的服务器位置，那么我该如何判断我的射线子弹是否射中了。
+
+## 检测射线是否穿过盒体
+
+> 参考：[GAMES101：Bounding Volume](https://www.bilibili.com/video/BV1X7411F744?t=3369.5&p=13)
+
+创造的盒体在世界中是OBB类型的，但是对于射线检测与盒体交互的方法AABB类型的是最简单的，我们只需将射线和盒体计算的过程放在盒体的相对空间即可，那么理论存在，实践开始。
+
+```c++
+bool LineCheckBox(const FBoxInfo& CheckBoxInfo, const FVector& Start, const FVector& End)
+{
+    //将射线和盒体放在盒体的相对空间
+	FBox CheckBox(-CheckBoxInfo.BoxExtent, CheckBoxInfo.BoxExtent);
+	FTransform BoxTransform = FTransform(CheckBoxInfo.Rotation, CheckBoxInfo.Location, FVector(1.f));
+	FRotator InverseRotator = UKismetMathLibrary::InverseTransformRotation(BoxTransform, FRotator(0.f));
+	FVector StartVector = InverseRotator.RotateVector(Start - CheckBoxInfo.Location);
+	FVector EndVector = InverseRotator.RotateVector(End - CheckBoxInfo.Location);
+	EndVector = (EndVector - StartVector).GetSafeNormal()*1.25f + EndVector;
+	//获取结果：是否命中
+	if(FMath::LineBoxIntersection(CheckBox, StartVector, EndVector, EndVector - StartVector))
+	{
+		return true;
+	}
+	return false;
+}
+//=======射线与AABB盒体是否相交
+inline bool FMath::LineBoxIntersection
+	(
+	const FBox&		Box,
+	const FVector&	Start,
+	const FVector&	End,
+	const FVector&	StartToEnd,
+	const FVector&	OneOverStartToEnd
+	)
+{
+	FVector	Time;
+	bool	bStartIsOutside = false;
+
+	if(Start.X < Box.Min.X){
+		bStartIsOutside = true;
+		if(End.X >= Box.Min.X){
+			Time.X = (Box.Min.X - Start.X) * OneOverStartToEnd.X;
+		}
+		else{
+			return false;
+		}
+	}
+	else if(Start.X > Box.Max.X){
+		bStartIsOutside = true;
+		if(End.X <= Box.Max.X){
+			Time.X = (Box.Max.X - Start.X) * OneOverStartToEnd.X;
+		}
+		else{
+			return false;
+		}
+	}
+	else{
+		Time.X = 0.0f;
+	}
+
+	if(Start.Y < Box.Min.Y){
+		bStartIsOutside = true;
+		if(End.Y >= Box.Min.Y){
+			Time.Y = (Box.Min.Y - Start.Y) * OneOverStartToEnd.Y;
+		}
+		else{
+			return false;
+		}
+	}
+	else if(Start.Y > Box.Max.Y){
+		bStartIsOutside = true;
+		if(End.Y <= Box.Max.Y){
+			Time.Y = (Box.Max.Y - Start.Y) * OneOverStartToEnd.Y;
+		}
+		else{
+			return false;
+		}
+	}
+	else{
+		Time.Y = 0.0f;
+	}
+
+	if(Start.Z < Box.Min.Z){
+		bStartIsOutside = true;
+		if(End.Z >= Box.Min.Z){
+			Time.Z = (Box.Min.Z - Start.Z) * OneOverStartToEnd.Z;
+		}
+		else{
+			return false;
+		}
+	}
+	else if(Start.Z > Box.Max.Z){
+		bStartIsOutside = true;
+		if(End.Z <= Box.Max.Z){
+			Time.Z = (Box.Max.Z - Start.Z) * OneOverStartToEnd.Z;
+		}
+		else{
+			return false;
+		}
+	}
+	else{
+		Time.Z = 0.0f;
+	}
+
+	if(bStartIsOutside){
+		const float	MaxTime = Max3(Time.X,Time.Y,Time.Z);
+
+		if(MaxTime >= 0.0f && MaxTime <= 1.0f){
+			const FVector Hit = Start + StartToEnd * MaxTime;
+			const float BOX_SIDE_THRESHOLD = 0.1f;
+			if(	Hit.X > Box.Min.X - BOX_SIDE_THRESHOLD && Hit.X < Box.Max.X + BOX_SIDE_THRESHOLD &&
+				Hit.Y > Box.Min.Y - BOX_SIDE_THRESHOLD && Hit.Y < Box.Max.Y + BOX_SIDE_THRESHOLD &&
+				Hit.Z > Box.Min.Z - BOX_SIDE_THRESHOLD && Hit.Z < Box.Max.Z + BOX_SIDE_THRESHOLD)
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+	else{
+		return true;
+	}
+}
+```
+
+这样检测射线是否穿过盒体就完成了，剩下的只需要判断射中哪个部位即可，
+
+```c++
+FServerRewindHitResult ServerRewindHitResult = {false, false, false};
+
+//头部
+FBoxInfo CheckBoxInfo = PackageToCheck.HitBoxInfos[FName("Head")];
+if (LineCheckBox(CheckBoxInfo, TraceStart, HitTarget))
+{
+    UE_LOG(LogTemp, Warning, TEXT("Head"));
+    ServerRewindHitResult = {true, true, false};
+    DebugFramePackage(PackageToCheck);
+    return ServerRewindHitResult;
+}
+//身体
+CheckBoxInfo = PackageToCheck.HitBoxInfos[FName("Body")];
+if (LineCheckBox(CheckBoxInfo, TraceStart, HitTarget))
+{
+    UE_LOG(LogTemp, Warning, TEXT("Body"));
+    ServerRewindHitResult = {true, false, true};
+    DebugFramePackage(PackageToCheck);
+    return ServerRewindHitResult;
+}
+//其他：四肢
+for(auto BoxPair : PackageToCheck.HitBoxInfos)
+{
+    if(BoxPair.Key == FName("Head") || BoxPair.Key == FName("Body")) continue;
+    CheckBoxInfo = BoxPair.Value;
+    if (LineCheckBox(CheckBoxInfo, TraceStart, HitTarget))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("other"));
+        ServerRewindHitResult = {true, false, false};
+        DebugFramePackage(PackageToCheck);
+        return ServerRewindHitResult;
+    }
+}
+UE_LOG(LogTemp, Warning, TEXT("not hit"));
+return ServerRewindHitResult;
+```
 
