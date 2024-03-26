@@ -146,7 +146,6 @@ FServerRewindHitResult ULagCompensationComponent::ServerRewind(ABlasterCharacter
 		}
 		PackageToCheck = InterpFramePackages(Older->GetValue(), Younger->GetValue(), HitTime);
 	}
-	//PackageToCheck.Character = HitCharacter;
 
 	//=======================================
 	//检测射线是否穿过盒体GAMES101：Bounding Volume https://www.bilibili.com/video/BV1X7411F744?t=3369.5&p=13
@@ -255,7 +254,6 @@ void ULagCompensationComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 	// }
 }
 
-//不对Package的Character进行处理
 FFramePackage ULagCompensationComponent::InterpFramePackages(const FFramePackage& OlderPackage,
 	const FFramePackage& YoungerPackage, float HitTime)
 {

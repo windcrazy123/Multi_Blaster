@@ -69,13 +69,21 @@ void ALineTraceWeapon::SingleLineTrace(const FVector& TraceStart, const FVector&
 			//on server
 			if (HasAuthority() && (!bUseServerRewind || OwnerPawn->IsLocallyControlled()))
 			{
+				const float DamageFactor = FireHit.BoneName == FName("head") ? 1.25f :(
+					(FireHit.BoneName == FName("pelvis") ||
+						FireHit.BoneName == FName("spine_02") ||
+                        FireHit.BoneName == FName("spine_03")
+                    ) ?
+                    1.1f : 1.f
+                );
+				
 				UGameplayStatics::ApplyDamage(
-                   DamagedCharacter, Damage,
+                   DamagedCharacter, Damage * DamageFactor,
                    InstigatorController, this,
                    UDamageType::StaticClass()
                 );
 			}
-			if (!HasAuthority() && bUseServerRewind)
+			else if (!HasAuthority() && bUseServerRewind)
 			{
 				if(OwnerCharacter == nullptr) OwnerCharacter = Cast<ABlasterCharacter>(OwnerPawn);
 				if(OwnerController == nullptr) OwnerController = Cast<ADCPlayerController>(InstigatorController);

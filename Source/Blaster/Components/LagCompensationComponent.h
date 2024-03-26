@@ -30,9 +30,6 @@ struct FFramePackage
 
 	UPROPERTY()
 	TMap<FName, FBoxInfo> HitBoxInfos;
-	//
-	// UPROPERTY()
-	// class ABlasterCharacter* Character;
 };
 
 USTRUCT(BlueprintType)
